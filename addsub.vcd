@@ -1,5 +1,5 @@
 $date
-	Sun Apr 19 15:41:50 2026
+	Sun Apr 19 16:43:39 2026
 $end
 $version
 	Icarus Verilog
@@ -55,7 +55,7 @@ $var wire 15 L f_jmp_prediction [15:1] $end
 $var wire 3 M d_regraddr1 [2:0] $end
 $var wire 3 N d_regraddr0 [2:0] $end
 $var wire 15 O d_pc [15:1] $end
-$var wire 4 P d_jmptype [3:0] $end
+$var wire 3 P d_jmptype [2:0] $end
 $var wire 15 Q d_jmp_prediction [15:1] $end
 $var wire 1 R d_issub $end
 $var wire 1 S d_isregadd $end
@@ -139,7 +139,7 @@ $var reg 1 A" x_isstr $end
 $var reg 1 B" x_isstri $end
 $var reg 1 Z x_issub $end
 $var reg 15 C" x_jmp_prediction [15:1] $end
-$var reg 4 D" x_jmptype [3:0] $end
+$var reg 3 D" x_jmptype [2:0] $end
 $var reg 15 E" x_pc [15:1] $end
 $var reg 3 F" x_regraddr0 [2:0] $end
 $var reg 3 G" x_regraddr1 [2:0] $end
@@ -527,7 +527,7 @@ b100 D
 b0 C
 b1 *
 b1 >
-b0 P
+b1 P
 b1 Q
 b0 O
 b11001100000001 W
@@ -579,19 +579,21 @@ b0 D
 b1 C
 b10 *
 b10 >
-b0 M"
+b0 P
 07
 b11000000001010 W
-b0 ]
-b0 L"
-b1 <
+0=
 b1100000 ;
 b10 Q
 b1 O
 b0 ?
 b0 "#
+b0 M"
 b0 9
+b0 ]
+b0 L"
 b0 A
+b1 <
 b100 L
 b100 w"
 b11 ^"
@@ -615,7 +617,7 @@ b100 $#
 0="
 0B"
 0A"
-b0 D"
+b1 D"
 b1100000 :"
 b1 H"
 1I"
@@ -643,19 +645,18 @@ b100 .#
 0]"
 #80000
 b1100000 M"
-b1100000 ]
-b1100000 L"
 b10 M
 b10 z"
 b10 '#
 b1100000 9
+b1100000 ]
+b1100000 L"
 0&
 b1 N
 b1 y"
 b1 &#
 b1010 X
 b1100000 A
-0=
 0\
 1S
 b10 E
@@ -663,7 +664,7 @@ b1 D
 b10 C
 b0 *
 b0 >
-b101 P
+1=
 b1 ;
 b0 J
 b0 `"
@@ -699,6 +700,7 @@ b1 |
 b1100000 }
 1$"
 b0 {
+b0 D"
 b1 :"
 b10 H"
 b0 F"
@@ -746,28 +748,27 @@ b1100000 f"
 b1100000 :
 b1100001 [
 b1100001 O"
-b1 M"
 1&
 b0 N
 b0 y"
 b0 &#
 b101 X
-b1100001 N"
 b1100000 !
 b1100000 K"
 b1100000 B
-b1 ]
-b1 L"
+b1100001 N"
+b1 M"
 0S
 b11 E
 b0 D
 b101 C
 b11 *
 b11 >
-b10 P
 b1100000 }"
 b1100000 +#
 b1 9
+b1 ]
+b1 L"
 b11000000101011 W
 b1100000 F
 b1100000 |"
@@ -820,7 +821,6 @@ b1 }
 b1 {
 1@"
 0?"
-b101 D"
 b1010 :"
 b0 H"
 b1 F"
@@ -848,29 +848,27 @@ b100 .#
 0Y
 0]"
 #120000
-x=
 x\
 x^
 xP"
-bx M"
 b11 M
 b11 z"
 b11 '#
-bx ]
-bx L"
+bx M"
 0&
 b1 N
 b1 y"
 b1 &#
 b1011 X
 bx 9
+bx ]
+bx L"
 1S
 b10 E
 b1 D
 b11 C
 b100 *
 b100 >
-b101 P
 b1 }"
 b1 +#
 bx A
@@ -918,7 +916,6 @@ b1100001 }
 b10 {
 0@"
 1?"
-b10 D"
 b101 :"
 b11 H"
 b0 F"
@@ -968,12 +965,12 @@ b1100101 O"
 0P"
 b1100101 N"
 b101 M"
-b101 ]
-b101 L"
 b10 M
 b10 z"
 b10 '#
 b101 9
+b101 ]
+b101 L"
 b100 N
 b100 y"
 b100 &#
@@ -984,8 +981,7 @@ b100 D
 b10 C
 b0 *
 b0 >
-b1 P
-0=
+b100 P
 b10100100010000 W
 b1100101 ;
 b1100000 J
@@ -1046,7 +1042,6 @@ b101 }
 b11 {
 1@"
 0?"
-b101 D"
 b1011 :"
 b100 H"
 b1 F"
@@ -1084,8 +1079,6 @@ b1100101 :
 b0 M
 b0 z"
 b0 '#
-b1 ]
-b1 L"
 b1100101 !
 b1100101 K"
 b1100101 B
@@ -1094,15 +1087,17 @@ b0 y"
 b0 &#
 b1100100 X
 b1 9
+b1 ]
+b1 L"
 1V
 0S
 b1 E
 0R
 b100 C
-b10 P
+b1 P
 b1 A
 1P"
-1=
+0=
 b111 Q
 b110 O
 b1001100100000 W
@@ -1143,7 +1138,7 @@ b1100101 }
 b100 {
 b101100100 N"
 1Z
-b1 D"
+b100 D"
 b100010 :"
 b0 H"
 b100 F"
@@ -1200,7 +1195,6 @@ b1110001101000 W
 b1100101 }"
 b1100101 +#
 0\
-0=
 b0 J
 b0 `"
 b0 f"
@@ -1271,7 +1265,7 @@ b101 {
 0@"
 b1100100 N"
 0Z
-b10 D"
+b1 D"
 b1100100 :"
 b0 F"
 b0 G"
@@ -1313,7 +1307,7 @@ b1010 X
 b11 E
 0R
 b10 C
-b101 P
+b0 P
 b1001 Q
 b1000 O
 b11000001010000 W
@@ -1398,10 +1392,11 @@ b111 D
 b111 C
 b111 *
 b111 >
-b1111 P
+b111 P
 b111111111111 W
 0\
 b1010 ;
+1=
 b1100000 J
 b1100000 `"
 b1100000 f"
@@ -1460,7 +1455,7 @@ b111 {
 b1100001 N"
 0Z
 1?"
-b101 D"
+b0 D"
 b1010 :"
 b1 F"
 b10 G"
@@ -1487,12 +1482,12 @@ b100 .#
 0Y
 0]"
 #240000
-bx ]
-bx L"
 x\
 x+
 x'
 bx 9
+bx ]
+bx L"
 b0xxxxxxxx J
 b0xxxxxxxx `"
 b0xxxxxxxx f"
@@ -1527,6 +1522,7 @@ bx *
 bx >
 bx P
 xP"
+0=
 bx ;
 b1011 Q
 b1010 O
@@ -1558,7 +1554,7 @@ b1000 {
 bx N"
 1Z
 0?"
-b1111 D"
+b111 D"
 b11111111 :"
 b111 H"
 0I"
@@ -1604,12 +1600,12 @@ b100 .#
 0]"
 #260000
 x7
+x=
 b1100 Q
 b1011 O
 b1010 F
 b1010 |"
-x=
-bx <
+b0xxxxxxxx <
 b1110 L
 b1110 w"
 b1101 ^"
@@ -1711,7 +1707,7 @@ b1001 1"
 b1001 p"
 xu
 xx
-bx y
+b0xxxxxxxx y
 xz
 xw
 xv
@@ -1755,8 +1751,8 @@ b11100 k"
 0f
 x+"
 x."
-bx /"
-bx q"
+b0xxxxxxxx /"
+b0xxxxxxxx q"
 x0"
 x-"
 x,"

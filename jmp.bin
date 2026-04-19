@@ -1,0 +1,24 @@
+@0
+// Unconditional branch
+00110000 01000001
+01000000 00000001
+// halt
+00001111 11111111
+@10
+00110011 01010000
+// Register equality branch
+// halt
+00001111 11111111
+@20
+// Register inequality branch
+// halt
+00001111 11111111
+@30
+// Immediate equality branch
+// halt
+00001111 11111111
+@40
+// movi '\n', r0
+00110000 01010000
+// halt
+00001111 11111111

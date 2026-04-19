@@ -1,5 +1,5 @@
 $date
-	Sun Apr 19 15:41:50 2026
+	Sun Apr 19 16:43:39 2026
 $end
 $version
 	Icarus Verilog
@@ -55,7 +55,7 @@ $var wire 15 L f_jmp_prediction [15:1] $end
 $var wire 3 M d_regraddr1 [2:0] $end
 $var wire 3 N d_regraddr0 [2:0] $end
 $var wire 15 O d_pc [15:1] $end
-$var wire 4 P d_jmptype [3:0] $end
+$var wire 3 P d_jmptype [2:0] $end
 $var wire 15 Q d_jmp_prediction [15:1] $end
 $var wire 1 R d_issub $end
 $var wire 1 S d_isregadd $end
@@ -139,7 +139,7 @@ $var reg 1 A" x_isstr $end
 $var reg 1 B" x_isstri $end
 $var reg 1 Z x_issub $end
 $var reg 15 C" x_jmp_prediction [15:1] $end
-$var reg 4 D" x_jmptype [3:0] $end
+$var reg 3 D" x_jmptype [2:0] $end
 $var reg 15 E" x_pc [15:1] $end
 $var reg 3 F" x_regraddr0 [2:0] $end
 $var reg 3 G" x_regraddr1 [2:0] $end
@@ -527,7 +527,7 @@ b101 D
 b0 C
 b0 *
 b0 >
-b100 P
+b1 P
 b1 Q
 b0 O
 b11001101000000 W
@@ -577,21 +577,20 @@ b100 &#
 b1100101 X
 b100 D
 b101 C
-b10 P
-b0 M"
 07
 b11001100101000 W
-b0 ]
-b0 L"
-b1 <
+0=
 b1101000 ;
 b10 Q
 b1 O
 b0 ?
 b0 "#
-0=
+b0 M"
 b0 9
+b0 ]
+b0 L"
 b0 A
+b1 <
 b100 L
 b100 w"
 b11 ^"
@@ -615,7 +614,7 @@ b101 $#
 0="
 0B"
 0A"
-b100 D"
+b1 D"
 b1101000 :"
 b0 H"
 1I"
@@ -643,21 +642,19 @@ b100 .#
 0]"
 #80000
 bx M"
-bx ]
-bx L"
 b100 M
 b100 z"
 b100 '#
 bx 9
+bx ]
+bx L"
 b101 N
 b101 y"
 b101 &#
 b1101100 X
 bx A
-x=
 b101 D
 b100 C
-b110 P
 b1100101 ;
 b11 Q
 b10 O
@@ -679,7 +676,6 @@ b0 |
 b1101000 }
 1$"
 b0 {
-b10 D"
 b1100101 :"
 b100 F"
 b101 G"
@@ -716,7 +712,6 @@ b100 .#
 0Y
 0]"
 #100000
-0=
 b1101000 F
 b1101000 |"
 1r"
@@ -758,7 +753,6 @@ b10 y
 bx ""
 b1100101 }
 b1 {
-b110 D"
 b1101100 :"
 b101 F"
 b100 G"
@@ -790,7 +784,6 @@ b111 z"
 b111 '#
 b1101111 X
 b111 C
-b111 P
 b101 Q
 b100 O
 b11001101111000 W
@@ -847,7 +840,7 @@ b1 &#
 b1010 X
 b1 D
 b10 C
-b101 P
+b0 P
 b11000001010000 W
 b1101111 ;
 b110 Q
@@ -872,7 +865,6 @@ b10 1"
 b10 p"
 b100 y
 b11 {
-b111 D"
 b1101111 :"
 b111 G"
 b101 C"
@@ -910,7 +902,7 @@ b0 X
 b0 E
 b0 D
 b0 C
-b0 P
+1=
 b1010 ;
 b111 Q
 b110 O
@@ -925,7 +917,7 @@ b11 p"
 b101 y
 b1101111 }
 b100 {
-b101 D"
+b0 D"
 b1010 :"
 b1 F"
 b10 G"
@@ -963,29 +955,27 @@ b100 .#
 0]"
 #180000
 02
-0\
 b111 M
 b111 z"
 b111 '#
-1^
-b0 [
-b0 O"
-0P"
+0\
 1#
 b111 N
 b111 y"
 b111 &#
 b11111111 X
-b0 N"
-b0 M"
+1^
+b0 [
+b0 O"
+0P"
 1R
 b111 D
 b111 C
 b111 *
 b111 >
-b1111 P
-b0 ]
-b0 L"
+b111 P
+b0 N"
+b0 M"
 b111111111111 W
 b0 ;
 b0 J
@@ -993,6 +983,8 @@ b0 `"
 b0 f"
 b0 :
 b0 9
+b0 ]
+b0 L"
 b1000 Q
 b111 O
 b0 ?
@@ -1001,7 +993,6 @@ b0 @
 b0 ##
 b1101111 F
 b1101111 |"
-1=
 b0 !
 b0 K"
 b0 B
@@ -1033,7 +1024,6 @@ b1010 }
 b101 {
 0J"
 0?"
-b0 D"
 b0 :"
 0I"
 b0 F"
@@ -1061,8 +1051,8 @@ b100 .#
 0Y
 0]"
 #200000
-x\
 bx ;
+x\
 x+
 x'
 x$
@@ -1078,8 +1068,6 @@ bx N
 bx y"
 bx &#
 bx X
-bx ]
-bx L"
 xV
 xS
 xT
@@ -1092,11 +1080,14 @@ bx *
 bx >
 bx P
 xP"
+0=
 b0xxxxxxxx J
 b0xxxxxxxx `"
 b0xxxxxxxx f"
 b0xxxxxxxx :
 bx 9
+bx ]
+bx L"
 b1001 Q
 b1000 O
 bx W
@@ -1106,7 +1097,6 @@ bx M"
 x^
 bx [
 bx O"
-0=
 bx !
 bx K"
 bx B
@@ -1135,7 +1125,7 @@ b110 {
 19"
 bx N"
 1Z
-b1111 D"
+b111 D"
 b11111111 :"
 b111 H"
 b111 F"
@@ -1180,13 +1170,13 @@ b100 .#
 0]"
 #220000
 x7
+x=
 b1010 Q
 b1001 O
 03
 b0 F
 b0 |"
-x=
-bx <
+b0xxxxxxxx <
 b1100 L
 b1100 w"
 b1011 ^"
@@ -1289,7 +1279,7 @@ b111 1"
 b111 p"
 xu
 xx
-bx y
+b0xxxxxxxx y
 xz
 xw
 xv
@@ -1337,8 +1327,8 @@ b11000 k"
 0f
 x+"
 x."
-bx /"
-bx q"
+b0xxxxxxxx /"
+b0xxxxxxxx q"
 x0"
 x-"
 x,"

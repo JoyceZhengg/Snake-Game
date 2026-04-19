@@ -115,7 +115,7 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     assign d_issub = d_ins[11];
     assign d_ismovi = opcode == 4'b0011 && !d_ins[11];
     assign d_ismovh = opcode == 4'b1001;
-    assign d_isjmp = opcode == 4'b1110;
+    assign d_isjmp = opcode == 4'b0100;
     assign d_isldp = opcode == 4'b1111 && d_ins[7:4] == 4'b0010;
     assign d_isld = d_isldp | (opcode == 4'b1111 && d_ins[11:9] == 4'b100 && d_ins[5:3] == 3'b000);
     assign d_isstri = opcode == 4'b1111 && d_ins[11] == 0;
@@ -144,8 +144,8 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     //assign immh = {x_imm, 8'b0};
 
     // Jump type control signals
-    wire [3:0]d_jmptype; reg [3:0]x_jmptype;
-    assign d_jmptype = d_ins[7:4];
+    wire [2:0]d_jmptype; reg [2:0]x_jmptype;
+    assign d_jmptype = d_ins[11:9];
 
     // Read ports from registers
     wire [2:0]d_regraddr0, d_regraddr1; reg [2:0]x_regraddr0, x_regraddr1;
@@ -195,8 +195,7 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     wire alusub, alueq, alult;
 
     assign aluin0 = reg_fw_data0;
-    assign aluin1 = x_isimmadd ? x_imm :
-                    x_isjmp ? 0 : reg_fw_data1;
+    assign aluin1 = x_isimmadd ? x_imm : reg_fw_data1;
     assign alusub = x_issub;
 
     // ALU
@@ -214,10 +213,9 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
                         forward_wb_mem ? wb_str_data : aluout;
 
     // Jump condition
-    assign x_jmp_cond = (x_jmptype == 4'b0000) ? alueq :
-                        (x_jmptype == 4'b0001) ? !alueq :
-                        (x_jmptype == 4'b0010) ? alult :
-                        (x_jmptype == 4'b0011) ? !alult : 0;
+    assign x_jmp_cond = (x_jmptype == 3'b000) ? 1 :
+                        (x_jmptype == 3'b100) ? alueq :
+                        (x_jmptype == 3'b101) ? !alueq : 0;
 
     // Jump targeting
     wire [15:1]x_jmp_target; reg [15:1]m_jmp_target, wb_jmp_target;
@@ -226,7 +224,8 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     wire x_jmp_mispredict; reg m_jmp_mispredict, wb_jmp_mispredict;
 
     //assign x_jmp_target = x_jmp_cond ? reg_fw_data1[15:1] : x_pc + 1;
-    assign x_jmp_target = (x_isjmp & x_jmp_cond) ? reg_fw_data1[15:1] : x_pc + 1;
+    //assign x_jmp_target = (x_isjmp & x_jmp_cond) ? reg_fw_data1[15:1] : x_pc + 1;
+    assign x_jmp_target = (x_isjmp & x_jmp_cond) ? {7'b0, reg_fw_data1} : x_pc + 1;
 
     //assign f_jmp_prediction = f_pc + 1;
     reg m_jumping, wb_jumping;
@@ -249,7 +248,7 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     reg halt_found = 0;
     wire illegal_ins;
     //assign illegal_ins = d_valid & (({d_halt, d_isregadd, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr} == 7'b0) | (d_isjmp & (d_jmptype > 3)) | d_ins === 16'bx);
-    assign illegal_ins = d_valid & (({d_halt, d_isimmadd, d_isregadd, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr} == 8'b0) | (d_isjmp & (d_jmptype > 3)));
+    assign illegal_ins = d_valid & (({d_halt, d_isimmadd, d_isregadd, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr} == 8'b0));
 
     // Stalling
     wire f_stall, d_stall, x_stall, m_stall;
