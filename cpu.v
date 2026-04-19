@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module main();
+module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Quartus 2
 
     initial begin
         $dumpfile("cpu.vcd");
@@ -372,5 +372,64 @@ module main();
         wb_valid <= m_valid & !flush;
     end
 
+
+
+
+    // input -- buttons
+
+    // synchronizer
+    reg [3:0] sync1 = 0;
+    reg [3:0] sync2 = 0;
+
+    always @(posedge clk) begin
+        sync1 <= ~buttons; //active low
+        sync2 <= sync1;
+    end 
+
+    // debouncer
+    reg [3:0] debounced_signal = 0;
+    debouncer b1(clk, sync2[0], debounced_signal[0]);
+    debouncer b2(clk, sync2[1], debounced_signal[1]);
+    debouncer b3(clk, sync2[2], debounced_signal[2]);
+    debouncer b4(clk, sync2[3], debounced_signal[3]);
+
+    // edge detector 
+    reg [3:0] prev_state = 0;
+
+    always @(posedge clk) begin
+        prev_state <= debounced_signal;
+    end
+
+    wire [3:0] pulse;
+    assign pulse = debounced_signal & ~prev_state; //pulse = 1 only when debounced_signal = 1 and prev_state = 0
+
+    // input register --> TODO: reset logic
+    reg [3:0] button_input = 0;
+
+    always @(posedge clk) begin
+        for (int i = 0; i<4; i++) begin
+            if (pulse[i] == 1) button_input[i] <= 1; 
+        end 
+    end
+
+endmodule
+
+module debouncer(input clk, 
+                 input signal_in, output signal_out);
+
+    reg [18:0] threshhold = 0;
+
+    always @(posedge clk) begin
+        if (signal_in == 1) begin
+            if (threshhold < 500000) begin
+                threshhold <= threshhold + 1;
+            end else begin
+                signal_out <= 1;
+            end
+        end else begin
+            threshhold <= 0;
+            signal_out <= 0;
+        end
+    end
 
 endmodule
