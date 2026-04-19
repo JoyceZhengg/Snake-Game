@@ -11,6 +11,43 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     wire clk;
     clock c0(clk);
 
+    // input -- buttons
+
+    // synchronizer
+    reg [3:0] sync1 = 0;
+    reg [3:0] sync2 = 0;
+
+    always @(posedge clk) begin
+        sync1 <= ~buttons; //active low
+        sync2 <= sync1;
+    end 
+
+    // debouncer
+    wire [3:0] debounced_signal = 0;
+    debouncer b1(clk, sync2[0], debounced_signal[0]);
+    debouncer b2(clk, sync2[1], debounced_signal[1]);
+    debouncer b3(clk, sync2[2], debounced_signal[2]);
+    debouncer b4(clk, sync2[3], debounced_signal[3]);
+
+    // edge detector 
+    reg [3:0] prev_state = 0;
+
+    always @(posedge clk) begin
+        prev_state <= debounced_signal;
+    end
+
+    wire [3:0] pulse;
+    assign pulse = debounced_signal & ~prev_state; //pulse = 1 only when debounced_signal = 1 and prev_state = 0
+
+    // input register --> TODO: reset logic
+    reg [3:0] button_input = 0;
+
+    always @(posedge clk) begin
+        for (int i = 0; i<4; i++) begin
+            if (pulse[i] == 1) button_input[i] <= 1; 
+        end 
+    end
+
     reg halt = 0;
     wire d_halt;
     reg x_halt = 0;
@@ -45,7 +82,7 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     wire [7:0]x_str_data; reg [7:0]m_str_data, wb_str_data;
 
     // memory
-    mem mem(clk, f_pc, ins, ld_addr, ld_data, mem_wen, wb_str_addr, wb_str_data);
+    memcontroller mem(clk, f_pc, ins, ld_addr, ld_data, mem_wen, wb_str_addr, wb_str_data);
 
     // Instruction queue to capture instructions output from memory while decode stalls
     // Position 1 has priority in the queue
@@ -375,65 +412,4 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
         halt <= (!m_stall & m_halt & m_valid & !flush);
         wb_valid <= m_valid & !flush;
     end
-
-
-
-
-    // input -- buttons
-
-    // synchronizer
-    reg [3:0] sync1 = 0;
-    reg [3:0] sync2 = 0;
-
-    always @(posedge clk) begin
-        sync1 <= ~buttons; //active low
-        sync2 <= sync1;
-    end 
-
-    // debouncer
-    reg [3:0] debounced_signal = 0;
-    debouncer b1(clk, sync2[0], debounced_signal[0]);
-    debouncer b2(clk, sync2[1], debounced_signal[1]);
-    debouncer b3(clk, sync2[2], debounced_signal[2]);
-    debouncer b4(clk, sync2[3], debounced_signal[3]);
-
-    // edge detector 
-    reg [3:0] prev_state = 0;
-
-    always @(posedge clk) begin
-        prev_state <= debounced_signal;
-    end
-
-    wire [3:0] pulse;
-    assign pulse = debounced_signal & ~prev_state; //pulse = 1 only when debounced_signal = 1 and prev_state = 0
-
-    // input register --> TODO: reset logic
-    reg [3:0] button_input = 0;
-
-    always @(posedge clk) begin
-        for (int i = 0; i<4; i++) begin
-            if (pulse[i] == 1) button_input[i] <= 1; 
-        end 
-    end
-
-endmodule
-
-module debouncer(input clk, 
-                 input signal_in, output signal_out);
-
-    reg [18:0] threshhold = 0;
-
-    always @(posedge clk) begin
-        if (signal_in == 1) begin
-            if (threshhold < 500000) begin
-                threshhold <= threshhold + 1;
-            end else begin
-                signal_out <= 1;
-            end
-        end else begin
-            threshhold <= 0;
-            signal_out <= 0;
-        end
-    end
-
 endmodule
