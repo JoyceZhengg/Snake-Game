@@ -35,12 +35,13 @@ module main();
     reg [15:1]f1_pc, ins_pc, ins_queue0_pc, ins_queue1_pc, x_pc, m_pc, wb_pc;
 
     // Read ports for memory
-    wire [15:1]ld_addr;
-    wire [15:0]ins, ld_data;
+    wire [15:0]ld_addr;
+    wire [15:0]ins;
+    wire [7:0]ld_data;
 
     // Write ports for memory
     wire mem_wen;
-    wire [15:1]x_str_addr; reg [15:1]m_str_addr, wb_str_addr;
+    wire [15:0]x_str_addr; reg [15:0]m_str_addr, wb_str_addr;
     wire [7:0]x_str_data; reg [7:0]m_str_data, wb_str_data;
 
     // memory
@@ -65,8 +66,8 @@ module main();
     // Instruction opcode signals
     wire [3:0]opcode;
     assign opcode = d_ins[15:12];
-    wire d_isimmadd, d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isldp, d_isstr, d_isstrp;
-    reg x_isimmadd, x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isld, x_isstr;
+    wire d_isimmadd, d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isldp, d_isstri, d_isstr, d_isstrp;
+    reg x_isimmadd, x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isld, x_isstri, x_isstr;
     reg m_isld = 0; reg m_isstr = 0;
     reg wb_isld = 0; reg wb_isstr = 0;
     reg m_isjmp, wb_isjmp;
@@ -79,9 +80,10 @@ module main();
     assign d_ismovh = opcode == 4'b1001;
     assign d_isjmp = opcode == 4'b1110;
     assign d_isldp = opcode == 4'b1111 && d_ins[7:4] == 4'b0010;
-    assign d_isld = d_isldp | (opcode == 4'b1111 && d_ins[7:4] == 4'b0000);
+    assign d_isld = d_isldp | (opcode == 4'b1111 && d_ins[11:9] == 4'b100 && d_ins[5:3] == 3'b000);
+    assign d_isstri = opcode == 4'b1111 && d_ins[11] == 0;
     assign d_isstrp = opcode == 4'b1111 && d_ins[7:4] == 4'b0011;
-    assign d_isstr = d_isstrp | (opcode == 4'b1111 && d_ins[7:4] == 4'b0001);
+    assign d_isstr = d_isstri | d_isstrp | (opcode == 4'b1111 && d_ins[11:9] == 4'b100 && d_ins[5:3] == 3'b001);
 
     // Load/store pair phase counter
     reg pair_phase = 0;
@@ -98,7 +100,7 @@ module main();
 
     // Instruction immediate
     wire [7:0]d_imm; reg [7:0]x_imm;
-    assign d_imm = d_ins[10:3];
+    assign d_imm = d_isstri ? {d_ins[10:9], d_ins[5:0]}: d_ins[10:3];
 
     //wire [15:0]imml, immh;
     //assign imml = {{8{x_imm[7]}}, x_imm};
@@ -145,11 +147,11 @@ module main();
                             (x_regraddr1 == master_regwaddr) & wb_regwen & wb_valid ?   master_regwdata : regrdata1;
 
     // Load and store address
-    assign ld_addr = (d_valid & d_isldp & (pair_phase == 1)) ? reg_fw_data0[7:1] + 1 : reg_fw_data0[7:1];
+    assign ld_addr = (d_valid & d_isldp & (pair_phase == 1)) ? reg_fw_data0 + 1 : reg_fw_data0;
     //assign x_str_addr = reg_fw_data0[15:1];
-    assign x_str_addr = x_is_strp1 ? reg_fw_data0[7:1] + 1 : reg_fw_data0[7:1];
+    assign x_str_addr = x_is_strp1 ? reg_fw_data0 + 1 : reg_fw_data0;
     // Store data
-    assign x_str_data = reg_fw_data1;
+    assign x_str_data = x_isstri ? x_imm : reg_fw_data1;
 
     // ALU input/output
     wire [7:0]aluin0, aluin1, aluout;
@@ -262,9 +264,9 @@ module main();
             $write("\n");
         end*/
         /*$write("f pc = %x, f stall: %x\n", f_pc, f_stall);
-        $write("alu: %x + %x = %x\n", aluin0, aluin1, aluout);
+        //$write("alu: %x + %x = %x\n", aluin0, aluin1, aluout);
         //$write("raddr0 = %x, raddr1 = %x\n", d_regraddr0, d_regraddr1);
-        $write("cond: %x\n", (opcode == 4'b0000) && d_ins[11]);
+        //$write("cond: %x\n", d_isld);
         $write("i = %x, 0 = %x, 1 = %x, d ins = %x\n", ins, ins_queue0_data, ins_queue1_data, d_ins);
         $write("0 full: %x, 1 full: %x\n", ins_queue0_full, ins_queue1_full);
         //$write("ins v: %x\n", ins_valid);
@@ -328,8 +330,8 @@ module main();
             x_regwaddr <= (d_valid & d_isldp & (pair_phase == 0)) ? d_regwaddr + 1: d_regwaddr;
             x_imm <= d_imm;
             x_jmptype <= d_jmptype;
-            {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isld, x_isstr} <=
-            {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr};
+            {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isld, x_isstri, x_isstr} <=
+            {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstri, d_isstr};
         end
         halt_found <= !flush & ((d_halt && d_valid) | halt_found);
         //pair_phase <= (d_valid & (d_isldp | d_isstrp)) ? !pair_phase : 0;
