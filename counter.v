@@ -4,13 +4,13 @@ module counter(input isHalt, input clk);
 
     always @(posedge clk) begin
         if (isHalt) begin
-            //$fdisplay(32'h8000_0002,"%d\n",count);
+            $fdisplay(32'h8000_0002,"%d\n",count);
             $finish(0);
         end
-        /*if (count == 500000) begin
-            $display("ran for 500000 cycles");
+        if (count == 50000) begin
+            $display("ran for 50000 cycles");
             $finish(1);
-        end*/
+        end
         count <= count + 1;
     end
 

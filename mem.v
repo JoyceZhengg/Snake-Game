@@ -9,7 +9,7 @@ module mem(input clk,
 
     /* Simulation -- read initial content from file */
     initial begin
-        $readmemh("mem.hex",data);
+        $readmemb("mem.bin",data);
     end
 
     reg [15:1]raddr0;

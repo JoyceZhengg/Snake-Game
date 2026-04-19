@@ -1,11 +1,11 @@
 `timescale 1ns/1ps
 // A wrapper for the regs module that intercepts writes for r0 and handles them accordingly.
 module ioregs(input clk,
-    input [3:0]raddr0, output [15:0]rdata0,
-    input [3:0]raddr1, output [15:0]rdata1,
-    input wen, input [3:0]waddr, input [15:0]wdata);
+    input [2:0]raddr0, output [15:0]rdata0,
+    input [2:0]raddr1, output [15:0]rdata1,
+    input wen, input [2:0]waddr, input [15:0]wdata);
 
-    reg [3:0]raddr0_prev, raddr1_prev;
+    reg [2:0]raddr0_prev, raddr1_prev;
 
     wire [15:0]regrdata0, regrdata1;
     assign rdata0 = raddr0_prev == 0 ? 0 : regrdata0;

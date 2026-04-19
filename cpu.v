@@ -12,6 +12,7 @@ module main();
     clock c0(clk);
 
     reg halt = 0;
+    wire d_halt;
     reg x_halt = 0;
     reg m_halt = 0;
     reg wb_halt = 0;
@@ -64,14 +65,16 @@ module main();
     // Instruction opcode signals
     wire [3:0]opcode;
     assign opcode = d_ins[15:12];
-    wire d_issub, d_ismovl, d_ismovh, d_isjmp, d_isld, d_isldp, d_isstr, d_isstrp;
-    reg x_issub, x_ismovl, x_ismovh, x_isjmp, x_isld, x_isstr;
+    wire d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isldp, d_isstr, d_isstrp;
+    reg x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isld, x_isstr;
     reg m_isld = 0; reg m_isstr = 0;
     reg wb_isld = 0; reg wb_isstr = 0;
     reg m_isjmp, wb_isjmp;
 
-    assign d_issub = opcode == 4'b0000;
-    assign d_ismovl = opcode == 4'b1000;
+    assign d_halt = (opcode == 4'b0000) && d_ins[11];
+    assign d_isregadd = opcode == 4'b0010;
+    assign d_issub = d_ins[11];
+    assign d_ismovi = opcode == 4'b0011 && !d_ins[11];
     assign d_ismovh = opcode == 4'b1001;
     assign d_isjmp = opcode == 4'b1110;
     assign d_isldp = opcode == 4'b1111 && d_ins[7:4] == 4'b0010;
@@ -87,23 +90,25 @@ module main();
     assign mem_wen = wb_valid & wb_isstr;
 
     // Instruction a,b,t register
-    wire [3:0]ra, rb, rt;
-    assign ra = d_ins[11:8];
-    assign rb = d_ins[7:4];
-    assign rt = d_ins[3:0];
+    wire [2:0]ra, rb, rt;
+    assign ra = d_ins[8:6];
+    assign rb = d_ins[5:3];
+    assign rt = d_ins[2:0];
 
     // Instruction immediate
-    reg [7:0]x_imm;
-    wire [15:0]imml, immh;
-    assign imml = {{8{x_imm[7]}}, x_imm};
-    assign immh = {x_imm, 8'b0};
+    wire [7:0]d_imm; reg [7:0]x_imm;
+    assign d_imm = d_ins[10:3];
+
+    //wire [15:0]imml, immh;
+    //assign imml = {{8{x_imm[7]}}, x_imm};
+    //assign immh = {x_imm, 8'b0};
 
     // Jump type control signals
     wire [3:0]d_jmptype; reg [3:0]x_jmptype;
     assign d_jmptype = d_ins[7:4];
 
     // Read ports from registers
-    wire [3:0]d_regraddr0, d_regraddr1; reg [3:0]x_regraddr0, x_regraddr1;
+    wire [2:0]d_regraddr0, d_regraddr1; reg [2:0]x_regraddr0, x_regraddr1;
     wire [15:0]regrdata0, regrdata1;
 
     assign d_regraddr0 = ra;
@@ -112,14 +117,14 @@ module main();
 
     // Write port from registers
     wire d_regwen; reg x_regwen, m_regwen, wb_regwen;
-    wire [3:0]d_regwaddr; reg [3:0]x_regwaddr, m_regwaddr, wb_regwaddr;
-    wire [15:0]x_regwdata; reg [15:0]m_regwdata, wb_regwdata;
+    wire [2:0]d_regwaddr; reg [2:0]x_regwaddr, m_regwaddr, wb_regwaddr;
+    wire [7:0]x_regwdata; reg [7:0]m_regwdata, wb_regwdata;
 
     wire master_regwen = wb_valid & wb_regwen;
-    wire [3:0]master_regwaddr = wb_regwaddr;
+    wire [2:0]master_regwaddr = wb_regwaddr;
     wire [15:0]master_regwdata = (wb_isld & !wb_str_forwarded) ? ld_data : wb_regwdata;
 
-    assign d_regwen = !halt && (d_ismovl || d_ismovh || d_issub || d_isld);
+    assign d_regwen = !halt && (d_ismovi || d_ismovh || d_isregadd || d_isld);
     assign d_regwaddr = rt;
 
     // registers
@@ -162,7 +167,7 @@ module main();
     assign forward_wb_mem = x_isld & wb_valid & wb_isstr & (wb_str_addr == ld_addr);
 
     // Register write data
-    assign x_regwdata = x_ismovl ? imml :
+    assign x_regwdata = x_ismovi ? x_imm :
                         x_ismovh ? {x_imm, reg_fw_data1[7:0]} : 
                         forward_m_mem ? m_str_data :
                         forward_wb_mem ? wb_str_data : aluout;
@@ -200,9 +205,10 @@ module main();
     assign flush = wb_valid & wb_jmp_mispredict;
 
     // Instruction type validation
-    reg illegal_found = 0;
+    reg halt_found = 0;
     wire illegal_ins;
-    assign illegal_ins = d_valid & (({d_issub, d_ismovl, d_ismovh, d_isjmp, d_isld, d_isstr} == 6'b0) | (d_isjmp & (d_jmptype > 3)) | d_ins === 16'bx);
+    //assign illegal_ins = d_valid & (({d_halt, d_isregadd, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr} == 7'b0) | (d_isjmp & (d_jmptype > 3)) | d_ins === 16'bx);
+    assign illegal_ins = d_valid & (({d_halt, d_isregadd, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr} == 7'b0) | (d_isjmp & (d_jmptype > 3)));
 
     // Stalling
     wire f_stall, d_stall, x_stall, m_stall;
@@ -212,9 +218,6 @@ module main();
                         (d_valid & (d_isldp | d_isstrp) & (pair_phase == 0)) |
                         (x_valid & x_isld & ((x_regwaddr == d_regraddr0) | (x_regwaddr == d_regraddr1)));
     assign x_stall = m_stall;
-    // TODO: check over code for places an initial x could disrupt something. Use valid bits to help avoid.
-    // TODO: Optimization: anything that can end in execute finishes early if nothing is in the pipeline ahead of it
-    // TODO: issue with many halting instructions after jump
 
     reg stall_default = 0;
     assign m_stall = stall_default;
@@ -226,11 +229,11 @@ module main();
         /*if(d_ins === 16'bx) begin
             halt <= 1;
         end*/
-        /*if(d_issub) begin
+        /*if(d_isregadd) begin
             $write("a: %d, b: %d, t: %d\n", ra, rb, rt);
             $write("ra: %d, rb: %d, rt: %d\n", regrdata0, regrdata1, x_regwdata);
             $write("rt(c): %c\n\n", x_regwdata);
-            //$write("a: %d, b: %d, t: %d\n", regrdata0, d_issub ? ~regrdata1 : regrdata1, x_regwdata);
+            //$write("a: %d, b: %d, t: %d\n", regrdata0, d_isregadd ? ~regrdata1 : regrdata1, x_regwdata);
             //$write("out: %d\n\n", aluout);
         end*/
         //$write("aout = %x or %c\n", aluout, aluout);
@@ -259,11 +262,11 @@ module main();
         /*$write("f pc = %x, f stall: %x\n", f_pc, f_stall);
         //$write("alu: %x + %x = %x\n", aluin0, aluin1, aluout);
         //$write("raddr0 = %x, raddr1 = %x\n", d_regraddr0, d_regraddr1);
-        $write("cond: %x\n", (x_valid & x_isld & ((x_regwaddr == d_regraddr0) | (x_regwaddr == d_regraddr1))));
+        $write("cond: %x\n", (opcode == 4'b0000) && d_ins[11]);
         $write("i = %x, 0 = %x, 1 = %x, d ins = %x\n", ins, ins_queue0_data, ins_queue1_data, d_ins);
         $write("0 full: %x, 1 full: %x\n", ins_queue0_full, ins_queue1_full);
         $write("ins v: %x\n", ins_valid);
-        $write("d valid = %x, d stall = %x\n", d_valid, d_stall);
+        $write("d valid = %x, d stall = %x, d halt = %x\n", d_valid, d_stall, d_halt);
         //$write("x str_addr = %x\n", x_str_addr);
         //$write("x str_addr2 = %x\n", reg_fw_data0);
         //$write("x str_data = %x\n", x_str_data);
@@ -272,7 +275,7 @@ module main();
         //$write("fw0: %x, fw1: %x\n", reg_fw_data0, reg_fw_data1);
         $write("x regrdata1: %x\n", regrdata1);
         $write("x write: (%x, %x, %x), valid = %x, h:%x\n", x_regwen & x_valid, x_regwaddr, x_regwdata, x_valid, x_halt);
-        //$write("x valid = %x, x stall = %x\n", x_valid, x_stall);
+        $write("x valid = %x, x stall = %x\n", x_valid, x_stall);
         $write("x jmp miss: %x, target: %x\n", x_jmp_mispredict, x_jmp_target);
         $write("m write: (%x, %x, %x), valid = %x, h:%x\n", m_regwen & m_valid, m_regwaddr, m_regwdata, m_valid, m_halt);
         $write("m jmp miss: %x, target: %x\n", m_jmp_mispredict, m_jmp_target);
@@ -297,7 +300,7 @@ module main();
         f1_valid <= f0_valid & !f_stall & !flush;
         ins_valid <= f1_valid & !flush;
         ins_queue0_valid <= !flush & ((d_stall & ins_queue1_full) ? ins_queue0_valid : ins_valid);
-        d_valid <= (f1_valid | ins_queue0_full) & !flush & !illegal_ins & !illegal_found;
+        d_valid <= (f1_valid | ins_queue0_full) & !flush & !(d_valid && d_halt) & !halt_found;
 
         // Manage instruction queue for decode
         ins_queue0_data <= (d_stall & ins_queue1_full) ? ins_queue0_data : ins;
@@ -318,20 +321,19 @@ module main();
         if (!d_stall | (d_valid & (d_isldp | d_isstrp) & (pair_phase == 0))) begin
             x_pc <= d_pc;
             x_jmp_prediction <= d_jmp_prediction;
-            // Check for invalid opcode
-            x_halt <= illegal_ins;
+            x_halt <= d_halt;
             {x_regraddr0, x_regraddr1} <= {d_regraddr0, d_regraddr1};
             x_regwen <= d_regwen;
             x_regwaddr <= (d_valid & d_isldp & (pair_phase == 0)) ? d_regwaddr + 1: d_regwaddr;
-            x_imm <= d_ins[11:4];
+            x_imm <= d_imm;
             x_jmptype <= d_jmptype;
-            {x_issub, x_ismovl, x_ismovh, x_isjmp, x_isld, x_isstr} <= {d_issub, d_ismovl, d_ismovh, d_isjmp, d_isld, d_isstr};
+            {x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isld, x_isstr} <= {d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr};
         end
-        illegal_found <= !flush & (illegal_ins | illegal_found);
+        halt_found <= !flush & ((d_halt && d_valid) | halt_found);
         //pair_phase <= (d_valid & (d_isldp | d_isstrp)) ? !pair_phase : 0;
         pair_phase <=   !(d_valid & (d_isldp | d_isstrp)) ? 0 :
                         (x_valid & (x_pc == d_pc)) ? 0 : 1;
-        x_valid <=  d_valid & !flush &
+        x_valid <=  d_valid & !flush & !illegal_ins &
                     ((d_stall & x_stall) | (!d_stall & !x_stall) | ((d_isldp | d_isstrp) & (pair_phase == 0)));
 
         // Execute
