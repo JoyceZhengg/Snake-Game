@@ -3,13 +3,15 @@
 module ioregs(input clk,
     input [2:0]raddr0, output [7:0]rdata0,
     input [2:0]raddr1, output [7:0]rdata1,
+    input [2:0]raddr2, output [7:0]rdata2,
     input wen, input [2:0]waddr, input [7:0]wdata);
 
-    reg [2:0]raddr0_prev, raddr1_prev;
+    reg [2:0]raddr0_prev, raddr1_prev, raddr2_prev;
 
-    wire [7:0]regrdata0, regrdata1;
+    wire [7:0]regrdata0, regrdata1, regrdata2;
     assign rdata0 = raddr0_prev == 0 ? 0 : regrdata0;
     assign rdata1 = raddr1_prev == 0 ? 0 : regrdata1;
+    assign rdata2 = raddr2_prev == 0 ? 0 : regrdata2;
 
     wire [7:0]regwdata;
     assign regwdata = waddr == 0 ? 0 : wdata;
@@ -18,6 +20,7 @@ module ioregs(input clk,
         clk,
         raddr0, regrdata0,
         raddr1, regrdata1,
+        raddr2, regrdata2,
         wen, waddr, regwdata);
 
     always @(posedge clk) begin
@@ -26,6 +29,7 @@ module ioregs(input clk,
         end
         raddr0_prev <= raddr0;
         raddr1_prev <= raddr1;
+        raddr2_prev <= raddr2;
     end
 
 endmodule

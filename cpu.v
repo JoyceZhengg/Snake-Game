@@ -14,6 +14,43 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     wire clk;
     clock c0(clk);
 
+    // input -- buttons
+
+    // synchronizer
+    reg [3:0] sync1 = 0;
+    reg [3:0] sync2 = 0;
+
+    always @(posedge clk) begin
+        sync1 <= ~buttons; //active low
+        sync2 <= sync1;
+    end 
+
+    // debouncer
+    wire [3:0] debounced_signal = 0;
+    debouncer b1(clk, sync2[0], debounced_signal[0]);
+    debouncer b2(clk, sync2[1], debounced_signal[1]);
+    debouncer b3(clk, sync2[2], debounced_signal[2]);
+    debouncer b4(clk, sync2[3], debounced_signal[3]);
+
+    // edge detector 
+    reg [3:0] prev_state = 0;
+
+    always @(posedge clk) begin
+        prev_state <= debounced_signal;
+    end
+
+    wire [3:0] pulse;
+    assign pulse = debounced_signal & ~prev_state; //pulse = 1 only when debounced_signal = 1 and prev_state = 0
+
+    // input register --> TODO: reset logic
+    reg [3:0] button_input = 0;
+
+    always @(posedge clk) begin
+        for (int i = 0; i<4; i++) begin
+            if (pulse[i] == 1) button_input[i] <= 1; 
+        end 
+    end
+
     reg halt = 0;
     wire d_halt;
     reg x_halt = 0;
@@ -69,8 +106,8 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     // Instruction opcode signals
     wire [3:0]opcode;
     assign opcode = d_ins[15:12];
-    wire d_isimmadd, d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isldp, d_isstri, d_isstr, d_isstrp;
-    reg x_isimmadd, x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isld, x_isstri, x_isstr;
+    wire d_isimmadd, d_isregadd, d_issub, d_ismovi, d_ismovh, d_ismovr, d_isjmp, d_isjmpi, d_isld, d_isldp, d_isstri, d_isstr, d_isstrp;
+    reg x_isimmadd, x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr;
     reg m_isld = 0; reg m_isstr = 0;
     reg wb_isld = 0; reg wb_isstr = 0;
     reg m_isjmp, wb_isjmp;
@@ -78,10 +115,12 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     assign d_halt = (opcode == 4'b0000) && d_ins[11];
     assign d_isimmadd = opcode == 4'b0001;
     assign d_isregadd = opcode == 4'b0010;
-    assign d_issub = d_ins[11];
-    assign d_ismovi = opcode == 4'b0011 && !d_ins[11];
+    assign d_issub = d_ins[11] || d_isjmpi;
+    assign d_ismovi = (opcode == 4'b0011 && !d_ins[11]) || d_ismovr;
     assign d_ismovh = opcode == 4'b1001;
-    assign d_isjmp = opcode == 4'b1110;
+    assign d_ismovr = (opcode == 4'b0011) && d_ins[11];
+    assign d_isjmp = opcode == 4'b0100 || d_isjmpi;
+    assign d_isjmpi = d_ins[15:14] == 2'b10;
     assign d_isldp = opcode == 4'b1111 && d_ins[7:4] == 4'b0010;
     assign d_isld = d_isldp | (opcode == 4'b1111 && d_ins[11:9] == 4'b100 && d_ins[5:3] == 3'b000);
     assign d_isstri = opcode == 4'b1111 && d_ins[11] == 0;
@@ -103,23 +142,25 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
 
     // Instruction immediate
     wire [7:0]d_imm; reg [7:0]x_imm;
-    assign d_imm = d_isstri ? {d_ins[10:9], d_ins[5:0]}: d_ins[10:3];
+    assign d_imm =  d_ismovr ? randnum:
+                    d_isjmpi ? {d_ins[13:9], d_ins[5:3]} :
+                    d_isstri ? {d_ins[10:9], d_ins[5:0]} : d_ins[10:3];
 
     //wire [15:0]imml, immh;
     //assign imml = {{8{x_imm[7]}}, x_imm};
     //assign immh = {x_imm, 8'b0};
 
     // Jump type control signals
-    wire [3:0]d_jmptype; reg [3:0]x_jmptype;
-    assign d_jmptype = d_ins[7:4];
+    wire [2:0]d_jmptype; reg [2:0]x_jmptype;
+    assign d_jmptype = d_ins[11:9];
 
     // Read ports from registers
-    wire [2:0]d_regraddr0, d_regraddr1; reg [2:0]x_regraddr0, x_regraddr1;
-    wire [7:0]regrdata0, regrdata1;
+    wire [2:0]d_regraddr0, d_regraddr1, d_regraddr2; reg [2:0]x_regraddr0, x_regraddr1, x_regraddr2;
+    wire [7:0]regrdata0, regrdata1, regrdata2;
 
     assign d_regraddr0 =    d_isimmadd ? rt : ra;
-    assign d_regraddr1 =    (d_valid & d_isstrp & (pair_phase == 0)) ? rt + 1 :
-                            (d_isimmadd || d_isjmp || d_ismovh || d_isstr) ? rt : rb;
+    assign d_regraddr1 =    rb;
+    assign d_regraddr2 =    (d_valid & d_isstrp & (pair_phase == 0)) ? rt + 1 : rt;
 
     // Write port from registers
     wire d_regwen; reg x_regwen, m_regwen, wb_regwen;
@@ -138,31 +179,34 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
         clk,
         d_regraddr0, regrdata0,
         d_regraddr1, regrdata1,
+        d_regraddr2, regrdata2,
         master_regwen, master_regwaddr, master_regwdata);
 
     // Forwarding-aware register read data
-    wire [7:0]reg_fw_data0, reg_fw_data1;
+    wire [7:0]reg_fw_data0, reg_fw_data1, reg_fw_data2;
     assign reg_fw_data0 =   x_regraddr0 == 0 ?                                          0 :
                             (x_regraddr0 == m_regwaddr) & m_regwen & m_valid ?          m_regwdata :
                             (x_regraddr0 == master_regwaddr) & wb_regwen & wb_valid ?   master_regwdata : regrdata0;
     assign reg_fw_data1 =   x_regraddr1 == 0 ?                                          0 :
                             (x_regraddr1 == m_regwaddr) & m_regwen & m_valid ?          m_regwdata :
                             (x_regraddr1 == master_regwaddr) & wb_regwen & wb_valid ?   master_regwdata : regrdata1;
+    assign reg_fw_data2 =   x_regraddr2 == 0 ?                                          0 :
+                            (x_regraddr2 == m_regwaddr) & m_regwen & m_valid ?          m_regwdata :
+                            (x_regraddr2 == master_regwaddr) & wb_regwen & wb_valid ?   master_regwdata : regrdata2;
 
     // Load and store address
     assign ld_addr = (d_valid & d_isldp & (pair_phase == 1)) ? reg_fw_data0 + 1 : reg_fw_data0;
     //assign x_str_addr = reg_fw_data0[15:1];
     assign x_str_addr = x_is_strp1 ? reg_fw_data0 + 1 : reg_fw_data0;
     // Store data
-    assign x_str_data = x_isstri ? x_imm : reg_fw_data1;
+    assign x_str_data = x_isstri ? x_imm : reg_fw_data2;
 
     // ALU input/output
     wire [7:0]aluin0, aluin1, aluout;
     wire alusub, alueq, alult;
 
     assign aluin0 = reg_fw_data0;
-    assign aluin1 = x_isimmadd ? x_imm :
-                    x_isjmp ? 0 : reg_fw_data1;
+    assign aluin1 = (x_isimmadd | x_isjmpi) ? x_imm : reg_fw_data1;
     assign alusub = x_issub;
 
     // ALU
@@ -175,15 +219,14 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
 
     // Register write data
     assign x_regwdata = x_ismovi ? x_imm :
-                        x_ismovh ? {x_imm, reg_fw_data1[7:0]} : 
                         forward_m_mem ? m_str_data :
                         forward_wb_mem ? wb_str_data : aluout;
 
     // Jump condition
-    assign x_jmp_cond = (x_jmptype == 4'b0000) ? alueq :
-                        (x_jmptype == 4'b0001) ? !alueq :
-                        (x_jmptype == 4'b0010) ? alult :
-                        (x_jmptype == 4'b0011) ? !alult : 0;
+    assign x_jmp_cond = (x_jmptype == 3'b000) ? 1 :
+                        (x_jmptype == 3'b100) ? alueq :
+                        (x_jmptype == 3'b101) ? !alueq :
+                        x_isjmpi ?              alueq : 0;
 
     // Jump targeting
     wire [15:1]x_jmp_target; reg [15:1]m_jmp_target, wb_jmp_target;
@@ -192,7 +235,8 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     wire x_jmp_mispredict; reg m_jmp_mispredict, wb_jmp_mispredict;
 
     //assign x_jmp_target = x_jmp_cond ? reg_fw_data1[15:1] : x_pc + 1;
-    assign x_jmp_target = (x_isjmp & x_jmp_cond) ? reg_fw_data1[15:1] : x_pc + 1;
+    //assign x_jmp_target = (x_isjmp & x_jmp_cond) ? reg_fw_data1[15:1] : x_pc + 1;
+    assign x_jmp_target = (x_isjmp & x_jmp_cond) ? {7'b0, reg_fw_data2} : x_pc + 1;
 
     //assign f_jmp_prediction = f_pc + 1;
     reg m_jumping, wb_jumping;
@@ -215,7 +259,7 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     reg halt_found = 0;
     wire illegal_ins;
     //assign illegal_ins = d_valid & (({d_halt, d_isregadd, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr} == 7'b0) | (d_isjmp & (d_jmptype > 3)) | d_ins === 16'bx);
-    assign illegal_ins = d_valid & (({d_halt, d_isimmadd, d_isregadd, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr} == 8'b0) | (d_isjmp & (d_jmptype > 3)));
+    assign illegal_ins = d_valid & (({d_halt, d_isimmadd, d_isregadd, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstr} == 8'b0));
 
     // Stalling
     wire f_stall, d_stall, x_stall, m_stall;
@@ -223,7 +267,7 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     assign f_stall = d_stall;
     assign d_stall =    x_stall |
                         (d_valid & (d_isldp | d_isstrp) & (pair_phase == 0)) |
-                        (x_valid & x_isld & ((x_regwaddr == d_regraddr0) | (x_regwaddr == d_regraddr1)));
+                        (x_valid & x_isld & ((x_regwaddr == d_regraddr0) | (x_regwaddr == d_regraddr2)));
     assign x_stall = m_stall;
 
     reg stall_default = 0;
@@ -268,10 +312,10 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
         end*/
         /*$write("f pc = %x, f stall: %x\n", f_pc, f_stall);
         //$write("alu: %x + %x = %x\n", aluin0, aluin1, aluout);
-        //$write("raddr0 = %x, raddr1 = %x\n", d_regraddr0, d_regraddr1);
-        //$write("cond: %x\n", d_isld);
+        //$write("raddr0 = %x, raddr1 = %x, 2 = %x\n", d_regraddr0, d_regraddr1, d_regraddr2);
+        //$write("cond: %b\n", d_isjmpi);
         $write("i = %x, 0 = %x, 1 = %x, d ins = %x\n", ins, ins_queue0_data, ins_queue1_data, d_ins);
-        $write("0 full: %x, 1 full: %x\n", ins_queue0_full, ins_queue1_full);
+        //$write("0 full: %x, 1 full: %x\n", ins_queue0_full, ins_queue1_full);
         //$write("ins v: %x\n", ins_valid);
         //$write("d valid = %x, d stall = %x, d halt = %x\n", d_valid, d_stall, d_halt);
         //$write("x str_addr = %x\n", x_str_addr);
@@ -279,7 +323,7 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
         //$write("x str_data = %x\n", x_str_data);
         //$write("pair phase = %x\n", pair_phase);
         //$write("x ld = %x\n", x_isld);
-        //$write("fw0: %x, fw1: %x\n", reg_fw_data0, reg_fw_data1);
+        //$write("fw0: %x, fw1: %x, fw2: %x\n", reg_fw_data0, reg_fw_data1, reg_fw_data2);
         //$write("x regrdata1: %x\n", regrdata1);
         $write("x write: (%x, %x, %x), valid = %x, h:%x\n", x_regwen & x_valid, x_regwaddr, x_regwdata, x_valid, x_halt);
         //$write("x valid = %x, x stall = %x\n", x_valid, x_stall);
@@ -328,13 +372,13 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
         if (!d_stall | (d_valid & (d_isldp | d_isstrp) & (pair_phase == 0))) begin
             x_pc <= d_pc;
             x_jmp_prediction <= d_jmp_prediction;
-            {x_regraddr0, x_regraddr1} <= {d_regraddr0, d_regraddr1};
+            {x_regraddr0, x_regraddr1, x_regraddr2} <= {d_regraddr0, d_regraddr1, d_regraddr2};
             x_regwen <= d_regwen;
             x_regwaddr <= (d_valid & d_isldp & (pair_phase == 0)) ? d_regwaddr + 1: d_regwaddr;
             x_imm <= d_imm;
             x_jmptype <= d_jmptype;
-            {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isld, x_isstri, x_isstr} <=
-            {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isld, d_isstri, d_isstr};
+            {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovi, x_ismovh, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr} <=
+            {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovi, d_ismovh, d_isjmp, d_isjmpi, d_isld, d_isstri, d_isstr};
         end
         halt_found <= !flush & ((d_halt && d_valid) | halt_found);
         //pair_phase <= (d_valid & (d_isldp | d_isstrp)) ? !pair_phase : 0;
