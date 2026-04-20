@@ -39,11 +39,13 @@ module memcontroller(input clk,
 
 
     // button inputs (read only)
-    buttons_input b_input(clk, buttons, ren, button_reg_[3:0]);
+    wire [7:0] button_reg;
+    assign button_reg[7:4] = 0;
+    buttons_input b_input(clk, buttons, ren, button_reg[3:0]);
 
     // 2-cycle delay for button reads
     wire ren_ = raddr1 == 16'hd000;
-    reg ren__;
+    /*reg ren__;
     reg ren___;
     wire ren = ren___;
 
@@ -51,7 +53,7 @@ module memcontroller(input clk,
     assign button_reg_[7:4] = 0;
     reg [7:0] button_reg__;
     reg [7:0] button_reg___;
-    wire button_reg = button_reg___;
+    wire [7:0] button_reg = button_reg___;
 
     always @(posedge clk) begin
         ren__ <= ren_;
@@ -59,7 +61,7 @@ module memcontroller(input clk,
 
         button_reg__ <= button_reg_;
         button_reg___ <= button_reg__;
-    end
+    end*/
 
     assign rdata1 = raddr1 < 16'h8000 ? mem_out :
                     raddr1 > 16'h7fff && raddr1 < 16'hcacf ? vga_out : 
