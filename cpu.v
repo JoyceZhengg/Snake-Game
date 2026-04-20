@@ -11,6 +11,10 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     wire clk;
     clock c0(clk);
 
+    // Random number generator
+    wire [7:0]randnum;
+    randgen randgen(clk, randnum);
+
     reg halt = 0;
     wire d_halt;
     reg x_halt = 0;
