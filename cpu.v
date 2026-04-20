@@ -117,9 +117,9 @@ module main(input [3:0] buttons); //inputs are mapped to by the pin planner in Q
     assign d_isimmadd = opcode == 4'b0001;
     assign d_isregadd = opcode == 4'b0010;
     assign d_issub = d_ins[11] || d_isjmpi;
-    assign d_ismovi = opcode == (4'b0011 && !d_ins[11]) || d_ismovr;
+    assign d_ismovi = (opcode == 4'b0011 && !d_ins[11]) || d_ismovr;
     assign d_ismovh = opcode == 4'b1001;
-    assign d_ismovr = opcode == 4'b0011 && d_ins[11];
+    assign d_ismovr = (opcode == 4'b0011) && d_ins[11];
     assign d_isjmp = opcode == 4'b0100 || d_isjmpi;
     assign d_isjmpi = d_ins[15:14] == 2'b10;
     assign d_isldp = opcode == 4'b1111 && d_ins[7:4] == 4'b0010;
