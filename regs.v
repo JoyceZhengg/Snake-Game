@@ -1,12 +1,12 @@
 `timescale 1ns/1ps
 
 module regs(input clk,
-    input [2:0]raddr0_, output [7:0]rdata0,
-    input [2:0]raddr1_, output [7:0]rdata1,
-    input [2:0]raddr2_, output [7:0]rdata2,
-    input wen, input [2:0]waddr, input [7:0]wdata);
+    input [2:0]raddr0_, output [15:0]rdata0,
+    input [2:0]raddr1_, output [15:0]rdata1,
+    input [2:0]raddr2_, output [15:0]rdata2,
+    input wen, input [2:0]waddr, input [15:0]wdata);
 
-    reg [7:0]data[0:7];
+    reg [15:0]data[0:7];
 
     reg [2:0]raddr0;
     reg [2:0]raddr1;
