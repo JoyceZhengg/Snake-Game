@@ -1,3 +1,4 @@
+// -------------------- INFO -----------------------------
 // IMPORTANT: We will take this assembly and convert it back to HEX 
 // We will then load it into the FPGA memory directly via the Quartus Software
 
@@ -25,9 +26,7 @@
 //0x4100 - 0x4163: snakeTailX array (100 elements)
 //0x4200 - 0x4263: snakeTailY array (100 elements)
 
-// ============================================================================
-// INITIALIZATION (Equivalent to gameInit)
-// ============================================================================
+// -------------INITIALIZATION (Equivalent to gameInit)-----------------------
 _start:
     // Initialize snakeHeadX (0x4000) to 20
     MOVL r5, 0x00      // Load lower byte of data memory base address [cite: 34]
@@ -44,9 +43,7 @@ _start:
     MOVH r5, 0x40
     STRI r5, 0         // mem[0x4003] = 0 [cite: 66, 68]
 
-// ============================================================================
-// MAIN GAME LOOP
-// ============================================================================
+// ------------------------ MAIN GAME LOOP -------------------------
 _game_loop:
     
     // --- INPUT POLLING ---
