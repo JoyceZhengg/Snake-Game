@@ -1,3 +1,30 @@
+// IMPORTANT: We will take this assembly and convert it back to HEX 
+// We will then load it into the FPGA memory directly via the Quartus Software
+
+//NOP -> 000000xxxXXXXXXX
+//HALT -> 000001xxxxXXXXXX
+//RAND rT -> 00001xxxxxxxxttt
+//ADDI rT, imm -> 00010mmmmmittt
+//SUBI rT, imm -> 00011iiiiiiiittt
+//ADD rT, rA, rB -> 0010000aaabbbttt
+//MOVL rT, imm -> 00110iiiiiiiittt
+//MOVH rT, imm -> 00111iiiiiiittt
+//BR rT -> 0100000000000ttt
+//BEQ rT, rA, rB -> 0100100aaabbbttt
+//BNE rT, rA, rB -> 0100101aaabbbttt
+//STRI rA, imm -> 11110iiaaaiiiiii (mem[rA] = imm)
+//LDR rT, rA -> 1111100aaa000ttt (rT = mem[rA])
+//STR rA, rT -> 1111100aaa001ttt (mem[rA] = rT)
+
+//0x4000: snakeHeadX
+//0x4001: snakeHeadY
+//0x4002: snakeTailLen
+//0x4003: snakeDirection
+//0x4004: bananaX
+//0x4005: bananaY
+//0x4100 - 0x4163: snakeTailX array (100 elements)
+//0x4200 - 0x4263: snakeTailY array (100 elements)
+
 // ============================================================================
 // INITIALIZATION (Equivalent to gameInit)
 // ============================================================================
