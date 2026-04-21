@@ -134,7 +134,7 @@ module main(input wire CLOCK_50,       // Physical 50 MHz clock pin
     wire [2:0]d_regraddr0, d_regraddr1, d_regraddr2; reg [2:0]x_regraddr0, x_regraddr1, x_regraddr2;
     wire [15:0]regrdata0, regrdata1, regrdata2;
 
-    assign d_regraddr0 =    d_isimmadd ? rt : ra;
+    assign d_regraddr0 =    (d_isimmadd | d_ismovih) ? rt : ra;
     assign d_regraddr1 =    rb;
     assign d_regraddr2 =    (d_valid & d_isstrp & (pair_phase == 0)) ? rt + 1 : rt;
 
@@ -195,6 +195,7 @@ module main(input wire CLOCK_50,       // Physical 50 MHz clock pin
 
     // Register write data
     assign x_regwdata = x_ismovil ? {{8{x_imm[7]}}, x_imm} :
+                        x_ismovih ? {x_imm, reg_fw_data0[7:0]} :
                         forward_m_mem ? m_str_data :
                         forward_wb_mem ? wb_str_data : aluout;
 
