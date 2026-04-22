@@ -66,5 +66,6 @@ module memcontroller(input clk,
     assign rdata1 = raddr1 < 16'h8000 ? mem_out :
                     raddr1 > 16'h7fff && raddr1 < 16'hcacf ? vga_out : 
                     raddr1 == 16'hd000 ? button_reg : 0; // 0 for undefined memory
+                    
 
 endmodule
