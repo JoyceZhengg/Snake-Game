@@ -1,18 +1,16 @@
 `timescale 1ns/1ps
 
-module main(input wire CLOCK_50,       // Physical 50 MHz clock pin
+module main(
+    input wire CLOCK_50,       // Physical 50 MHz clock pin
     input wire [3:0] buttons,  // Physical buttons
     
     // --- VGA Physical Output Pins ---
     output wire VGA_HS,        // Horizontal Sync
     output wire VGA_VS,        // Vertical Sync
-    output wire [7:0] VGA_R,   // 8-bit Red
-    output wire [7:0] VGA_G,   // 8-bit Green
-    output wire [7:0] VGA_B,   // 8-bit Blue
-    output wire VGA_BLANK_N,   // DAC Blanking
-    output wire VGA_SYNC_N,    // DAC Sync
-    output wire VGA_CLK        // DAC Clock
-); //inputs are mapped to by the pin planner in Quartus 2
+    output wire [1:0] VGA_R,   // 2-bit Red
+    output wire [1:0] VGA_G,   // 2-bit Green
+    output wire [1:0] VGA_B    // 2-bit Blue
+);
 
     initial begin
         $dumpfile("cpu.vcd");
@@ -60,8 +58,26 @@ module main(input wire CLOCK_50,       // Physical 50 MHz clock pin
     wire [15:0]x_str_addr; reg [15:0]m_str_addr, wb_str_addr;
     wire [15:0]x_str_data; reg [15:0]m_str_data, wb_str_data;
 
-    // memory
-    memcontroller mem(clk, f_pc, ins, ld_addr, ld_data, mem_wen, wb_str_addr, wb_str_data, buttons);
+    wire [7:0] vga_read_wire; // Declare a wire to connect them
+    
+    memcontroller mem(clk, f_pc, ins, ld_addr, ld_data, mem_wen, wb_str_addr, wb_str_data, buttons, vga_read_wire);
+
+    vga_controller my_vga (
+        .clk_50mhz(CLOCK_50),
+        .reset(1'b0),                 // Reset bypassed as planned
+        .cpu_we(mem_wen),             // Write Enable from CPU
+        .cpu_waddr(wb_str_addr),      // Store Address
+        .cpu_wdata(wb_str_data[7:0]), // Store Data (only need 8 bits for color)
+        .cpu_raddr(ld_addr),          // Load Address
+        .cpu_rdata(vga_read_wire),    // Feeds back into memcontroller
+        
+        // Output to physical pins
+        .vga_hsync(VGA_HS),
+        .vga_vsync(VGA_VS),
+        .vga_r(VGA_R),
+        .vga_g(VGA_G),
+        .vga_b(VGA_B)
+    );
 
     // Instruction queue to capture instructions output from memory while decode stalls
     // Position 1 has priority in the queue
