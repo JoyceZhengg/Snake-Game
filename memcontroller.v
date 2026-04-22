@@ -1,51 +1,46 @@
 `timescale 1ns/1ps
 
 module memcontroller(input clk,
-    input [15:1]raddr0, output [15:0]rdata0,            //instruction read
-    input [15:0]raddr1, output [15:0]rdata1,             //data/button/frame buffer read
-    input wen, input [15:0]waddr, input [15:0]wdata,     //data write
-    input [3:0] buttons);                               //external button pins
+    input [15:1]raddr0, output [15:0]rdata0,            // CPU instruction read
+    input [15:0]raddr1, output [7:0]rdata1,             // CPU button input / data read
+    input wen, input [15:0]waddr, input [7:0]wdata,     // CPU data / frame buffer write
+    input [15:0]vga_raddr, output [7:0]vga_rdata,       // VGA frame buffer read
+    input [3:0] buttons);                               // external button pins
 
-    // instructions or data
-    wire [15:0] mem_out;
-    wire mem_wen = wen && (waddr < 16'h8000);
-    mem mem(clk, raddr0, rdata0, raddr1, mem_out, mem_wen, waddr, wdata);
+    // instructions
+    memRAM RAM(clk, raddr0, rdata0);
 
-    // vga -- frame buffer
-    wire [7:0] vga_out;
-    wire vga_wen = wen && (waddr > 16'h7fff && waddr < 16'hcacf);
-    //vga_controller vga(raddr1, vga_out, vga_wen, waddr, wdata);
-        // The VGA controller has an internal dual-port RAM. 
-    // Port A is driven by the CPU wires below. Port B drives the screen.
-    /*vga_controller my_vga (
-        .clk_50mhz(CLOCK_50),
-        .reset(!buttons[0]), // Assuming buttons[0] is used as a system reset
-        
-        // --- CPU Write Inputs ---
-        .cpu_we(mem_wen),           // High when the CPU executes a STORE
-        .cpu_addr(wb_str_addr),     // The target memory address
-        .cpu_data(wb_str_data),     // The 8-bit color data
-        
-        // --- Physical VGA Outputs ---
-        .vga_hsync(VGA_HS),
-        .vga_vsync(VGA_VS),
-        .vga_r(VGA_R),
-        .vga_g(VGA_G),
-        .vga_b(VGA_B),
-        .vga_blank_n(VGA_BLANK_N),
-        .vga_sync_n(VGA_SYNC_N),
-        .vga_clk(VGA_CLK)
-    );*/
+    // data
+    wire [7:0] data_out;
+    wire data_wen;
+    assign data_wen = (wen && waddr > 16'h3fff && waddr < 16'h8000);
+    memData data(clk, raddr1, data_out, data_wen, waddr, wdata);
 
+    // frame buffer
+    wire fb_wen;
+    fb_wen = (wen && waddr > 16'h7fff && waddr < 16'hd000);
+    memFrameBuffer fb(clk, vga_raddr, vga_rdata, fb_wen, waddr, wdata);
 
     // button inputs (read only)
     wire [7:0] button_reg;
-    assign button_reg[7:4] = 0;
+    assign button_reg[15:4] = 0;
+    wire ren = (raddr1 == 16'hd000);
     buttons_input b_input(clk, buttons, ren, button_reg[3:0]);
 
-    // 2-cycle delay for button reads
-    wire ren_ = raddr1 == 16'hd000;
-    /*reg ren__;
+    reg [15:0] raddr1_ = 0;
+    reg [15:0] raddr1__ = 0;
+    always @(posedge clk) begin
+        raddr1_ <= raddr1;
+        raddr1__ <= raddr1_;
+    end
+
+    // is it fine to read non-dataMem addresses?
+    assign rdata1 = raddr1__ < 16'hd000 ? data_out :
+                    raddr1__ == 16'hd000 ? button_reg : 0; // 0 for undefined memory
+
+endmodule
+
+/*reg ren__;
     reg ren___;
     wire ren = ren___;
 
@@ -62,9 +57,3 @@ module memcontroller(input clk,
         button_reg__ <= button_reg_;
         button_reg___ <= button_reg__;
     end*/
-
-    assign rdata1 = raddr1 < 16'h8000 ? mem_out :
-                    raddr1 > 16'h7fff && raddr1 < 16'hcacf ? vga_out : 
-                    raddr1 == 16'hd000 ? button_reg : 0; // 0 for undefined memory
-
-endmodule

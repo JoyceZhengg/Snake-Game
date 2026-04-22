@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+/*`timescale 1ns/1ps
 
 module mem(input clk,
     input [15:1]raddr0_, output [15:0]rdata0_,
@@ -7,7 +7,7 @@ module mem(input clk,
 
     reg [7:0]data[0:16'h7fff];
 
-    /* Simulation -- read initial content from file */
+    // Simulation -- read initial content from file 
     initial begin
         $readmemb("mem.bin",data);
     end
@@ -31,4 +31,4 @@ module mem(input clk,
         end
     end
 
-endmodule
+endmodule*/
