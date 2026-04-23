@@ -65,34 +65,41 @@ module vga_controller (
     // 160 * 120 = 19,200 total addresses needed.
     reg [7:0] frame_buffer [0:19199]; 
     reg [7:0] current_pixel_color;
-
+// ========================================================
+    // MEMORY PORT MULTIPLEXING (M10K BLOCK RAM SAFE)
     // ========================================================
-    // MEMORY PORT MULTIPLEXING
-    // ========================================================
-    // If Write Enable is high, Port A uses the Write Address. 
-    // Otherwise, Port A uses the Read Address.
-    wire [15:0] active_cpu_addr = cpu_wen ? cpu_waddr : cpu_raddr;
+    // Note: Make sure you are using 'cpu_wen' to match your port declaration!
+    wire [15:0] active_cpu_addr = cpu_wen ? cpu_waddr : cpu_raddr; 
     wire valid_cpu_access = (active_cpu_addr >= 16'h8000) && (active_cpu_addr < 16'hCB00);
-    wire [14:0] cpu_ram_index = active_cpu_addr - 16'h8000;
 
     wire [7:0] scaled_x = h_count[9:2]; 
     wire [7:0] scaled_y = v_count[9:2];
-    wire [14:0] vga_read_addr = (scaled_y << 7) + (scaled_y << 5) + scaled_x;
+    wire [14:0] raw_vga_addr = (scaled_y << 7) + (scaled_y << 5) + scaled_x;
 
+    // Safety clamps to prevent reading outside the 19,200 boundary
+    wire [14:0] safe_cpu_index = valid_cpu_access ? (active_cpu_addr - 16'h8000) : 15'd0;
+    wire [14:0] safe_vga_index = (raw_vga_addr < 19200) ? raw_vga_addr : 15'd0;
+
+    reg [7:0] raw_cpu_rdata;
+
+    // This perfectly matches the Block RAM hardware template
     always @(posedge clk_50mhz) begin
-        // PORT A: CPU Access (Reads and Writes)
-        if (valid_cpu_access) begin
-            if (cpu_wen) begin
-                frame_buffer[cpu_ram_index] <= cpu_wdata;
-            end
-            cpu_rdata <= frame_buffer[cpu_ram_index];
-        end else begin
-            cpu_rdata <= 8'h00; // Output 0 if the CPU looks outside VRAM
+        // PORT A: Unconditional Read/Write
+        if (cpu_wen && valid_cpu_access) begin
+            frame_buffer[safe_cpu_index] <= cpu_wdata;
         end
+        raw_cpu_rdata <= frame_buffer[safe_cpu_index]; 
         
-        // PORT B: VGA Display Read
-        if (vga_read_addr < 19200) begin
-            current_pixel_color <= frame_buffer[vga_read_addr];
+        // PORT B: Unconditional Read
+        current_pixel_color <= frame_buffer[safe_vga_index];
+    end
+
+    // Route the data OUTSIDE the memory block so Quartus doesn't panic
+    always @(*) begin
+        if (valid_cpu_access) begin
+            cpu_rdata = raw_cpu_rdata;
+        end else begin
+            cpu_rdata = 8'h00; // Output 0 if CPU looks outside VRAM
         end
     end
 
