@@ -7,11 +7,19 @@ TEST_DIFFS=${addsuffix .diff,${TEST_NAMES}}
 TEST_RESULTS=${addsuffix .result,${TEST_NAMES}}
 TEST_TESTS=${addsuffix .test,${TEST_NAMES}}
 TEST_VCDS=${addsuffix .vcd,${TEST_NAMES}}
+CXX ?= c++
+CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra
 
 all : cpu
 
 cpu : Makefile ${V_FILES}
 	iverilog -g2012 -o cpu ${V_FILES}
+
+tools/assemble : Makefile tools/assemble.cpp
+	${CXX} ${CXXFLAGS} -o tools/assemble tools/assemble.cpp
+
+snakeGame.bin : Makefile snakeGame.s tools/assemble
+	./tools/assemble snakeGame.s snakeGame.bin
 
 ${TEST_RAWS} : %.raw : Makefile cpu %.bin
 	@echo "failed to run" > $*.raw
@@ -38,7 +46,7 @@ ${TEST_TESTS} : %.test : Makefile %.result
 test : ${TEST_TESTS};
 
 clean:
-	-rm -rf cpu *.out *.diff *.raw *.out *.result *.time *.cycles
+	-rm -rf cpu tools/assemble *.out *.diff *.raw *.out *.result *.time *.cycles
 
 ######### remote things ##########
 
