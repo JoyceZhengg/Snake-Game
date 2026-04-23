@@ -45,9 +45,11 @@
 // gameInit
 
 start:
-    // Clear game state words at 0x4000 through 0x4012.
+    // Guarantee r0 is exactly 0x0000 on boot so loops work safely
     MOVL r0, 0x00
     MOVH r0, 0x00
+
+    // Clear game state words at 0x4000 through 0x4012.
     MOVL r5, 0x00
     MOVH r5, 0x40
     MOVL r4, 10
@@ -509,8 +511,10 @@ spawn_banana:
     // forward until the screen says the pixel is empty.
     RAND r2
     MOVH r2, 0x00
-    MOVL r1, 0xA1
-    MOVH r1, 0x80
+    // Fix: Shift the starting search location to the middle of the screen (0xA000)
+    // This guarantees the banana will not spawn under the monitor's plastic bezel
+    MOVL r1, 0x00
+    MOVH r1, 0xA0
     ADD  r1, r1, r2
 
 spawn_scan:
@@ -561,21 +565,33 @@ game_over_poll:
     MOVH r6, hi(start)
     BEQI r6, r1, 1
 
-    // Otherwise, keep polling the buttons
+    // Otherwise, keep polling the buttons forever
     MOVL r7, lo(game_over_poll)
     MOVH r7, hi(game_over_poll)
     BR   r7
 
 delay:
-    // This controls the speed of the snake!
+    // Nested loop to control the speed of the snake!
+    // Decrease 0x14 to make the snake faster, increase to make it slower.
+    MOVL r3, 0x14
+    MOVH r3, 0x00
+
+delay_outer:
+    // Inner loop counts down from 65,535
     MOVL r1, 0xFF
     MOVH r1, 0xFF
 
-delay_loop:
+delay_inner:
     SUBI r1, 1
-    MOVL r7, lo(delay_loop)
-    MOVH r7, hi(delay_loop)
+    MOVL r7, lo(delay_inner)
+    MOVH r7, hi(delay_inner)
     BNE  r7, r1, r0
+
+    // Inner loop finished, decrement outer loop
+    SUBI r3, 1
+    MOVL r7, lo(delay_outer)
+    MOVH r7, hi(delay_outer)
+    BNE  r7, r3, r0
 
     MOVL r7, lo(main_loop)
     MOVH r7, hi(main_loop)
