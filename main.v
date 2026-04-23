@@ -31,8 +31,8 @@ module main(
     );
 
     vga_controller vga_inst (
-        CLOCK_50, //CLOCK_25, 
-        .reset      (1'b0),      //TODO: figure out reset
+        .clk_50mhz  (CLOCK_50), 
+        .reset      (1'b0),      
         .cpu_wen    (vga_wen),
         .cpu_waddr  (vga_waddr),
         .cpu_wdata  (vga_wdata),
