@@ -57,11 +57,16 @@ module cpu(
 
     wire [7:0] vga_read_wire; // Declare a wire to connect them
     
-    memcontroller mem(CLOCK_50, 
-        f_pc, ins, 
-        ld_addr, ld_data, 
-        mem_wen, wb_str_addr, wb_str_data, 
-        buttons,
+    memcontroller mem(
+        .clk        (CLOCK_50),
+        .raddr0     (f_pc), 
+        .rdata0     (ins), 
+        .raddr1     (ld_addr), 
+        .rdata1     (ld_data), 
+        .wen        (mem_wen), 
+        .waddr      (wb_str_addr), 
+        .wdata      (wb_str_data), 
+        .buttons    (buttons),
         .vga_raddr  (vga_raddr),
         .vga_rdata  (vga_rdata),
         .vga_wen    (vga_wen),

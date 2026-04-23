@@ -29,7 +29,7 @@ module memcontroller(input clk,
 
     // cpu to vga frame buffer reads/writes
     assign vga_raddr = raddr1;
-    assign vga_wen = (wen && waddr >= 16'h8000 && waddr < 16'hcaff);
+    assign vga_wen = (wen && waddr >= 16'h8000 && waddr < 16'hcb00);
     assign vga_waddr = waddr;
     assign vga_wdata = wdata[7:0];
 
@@ -41,7 +41,7 @@ module memcontroller(input clk,
     end
 
     assign rdata1 = raddr1__ < 16'h8000 ? data_out :
-                    raddr1__ < 16'hcaff ? {8'b0, vga_rdata} :
+                    raddr1__ < 16'hcb00 ? {8'b0, vga_rdata} :
                     raddr1__ == 16'd000 ? {12'b0, button_reg} : 16'b0; // 0 for undefined memory
 
 endmodule

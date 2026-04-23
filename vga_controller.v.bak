@@ -1,10 +1,9 @@
 module vga_controller (
     input wire clk_50mhz,  // 50 MHz system clock
-    //input wire clk_25mhz.  // 25 MHz vga clock --> set this in Quartus through PLL
     input wire reset,      // Bypassed
 
     // --- CPU Memory Interface (Shared Port A) ---
-    input wire cpu_wen,           // Write Enable from memcontroller
+    input wire cpu_we,            // Write Enable from memcontroller
     input wire [15:0] cpu_waddr,  // Store Address (wb_str_addr)
     input wire [7:0] cpu_wdata,   // Store Data (wb_str_data)
     input wire [15:0] cpu_raddr,  // Load Address (ld_addr)
@@ -71,7 +70,7 @@ module vga_controller (
     // ========================================================
     // If Write Enable is high, Port A uses the Write Address. 
     // Otherwise, Port A uses the Read Address.
-    wire [15:0] active_cpu_addr = cpu_wen ? cpu_waddr : cpu_raddr;
+    wire [15:0] active_cpu_addr = cpu_we ? cpu_waddr : cpu_raddr;
     wire valid_cpu_access = (active_cpu_addr >= 16'h8000) && (active_cpu_addr < 16'hCB00);
     wire [14:0] cpu_ram_index = active_cpu_addr - 16'h8000;
 
@@ -82,7 +81,7 @@ module vga_controller (
     always @(posedge clk_50mhz) begin
         // PORT A: CPU Access (Reads and Writes)
         if (valid_cpu_access) begin
-            if (cpu_wen) begin
+            if (cpu_we) begin
                 frame_buffer[cpu_ram_index] <= cpu_wdata;
             end
             cpu_rdata <= frame_buffer[cpu_ram_index];
