@@ -21,9 +21,9 @@ module memcontroller(input clk,
     memFrameBuffer fb(clk, vga_raddr, vga_rdata, fb_wen, waddr, wdata);*/
 
     // button inputs (read only)
-    wire [3:0] button_reg;
-    wire ren = (raddr1 == 16'hd000);
-    buttons_input b_input(clk, buttons, ren, button_reg);
+    //wire [3:0] button_reg;
+    //wire ren = (raddr1 == 16'hd000);
+    //buttons_input b_input(clk, buttons, ren, button_reg);
 
     // cpu to vga frame buffer reads/writes
     assign vga_raddr = raddr1_; // Changed to raddr1_
@@ -40,7 +40,7 @@ module memcontroller(input clk,
 
     assign rdata1 = raddr1__ < 16'h8000 ? data_out :
                     raddr1__ < 16'hcb00 ? {8'b0, vga_rdata} :
-                    raddr1__ == 16'hd000 ? {12'b0, button_reg} : 16'b0; // 0 for undefined memory
+                    raddr1__ == 16'hd000 ? {12'b0, ~buttons} : 16'b0; // <-- Inverted raw buttons go right here!
 
 endmodule
 
