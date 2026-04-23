@@ -18,8 +18,8 @@ cpu : Makefile ${V_FILES}
 tools/assemble : Makefile tools/assemble.cpp
 	${CXX} ${CXXFLAGS} -o tools/assemble tools/assemble.cpp
 
-snakeGame.bin : Makefile snakeGame.s tools/assemble
-	./tools/assemble snakeGame.s snakeGame.bin
+snake.bin : Makefile snake.asm tools/assemble
+	./tools/assemble snake.asm snake.bin
 
 ${TEST_RAWS} : %.raw : Makefile cpu %.bin
 	@echo "failed to run" > $*.raw
