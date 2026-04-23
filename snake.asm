@@ -43,16 +43,26 @@
 
 
 // gameInit
+//   r0 = always 0x0000
+//   r1 = VRAM address being cleared/written
+//   r2 = row counter
+//   r3 = temp VRAM address / pixel position
+//   r4 = column counter / temp value
+//   r5 = data memory address pointer
+//   r6 = function address / temp
+//   r7 = return address / branch target
 
 start:
-    // Guarantee r0 is exactly 0x0000 on boot so loops work safely
     MOVL r0, 0x00
     MOVH r0, 0x00
 
-    // Clear game state words at 0x4000 through 0x4012.
+    // Clear game state words at 0x4000 through 0x4012
+    // r5 = current memory address to clear
+    // r4 = counter (10 words to clear)
     MOVL r5, 0x00
     MOVH r5, 0x40
     MOVL r4, 10
+
 clear_state_words:
     STR  r5, r0
     ADDI r5, 2
@@ -62,6 +72,11 @@ clear_state_words:
     BNE  r7, r4, r0
 
     // Clear the whole 160x120 framebuffer to background.
+    // r1 = start of current row
+    // r2 = row counter (120 rows)
+    // r3 = current pixel address
+    // r4 = column counter (160 pixels)
+    // lol end of comments for now
     MOVL r1, 0x00
     MOVH r1, 0x80
     MOVL r2, 120
