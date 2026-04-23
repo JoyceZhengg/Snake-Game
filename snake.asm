@@ -46,6 +46,8 @@
 
 start:
     // Clear game state words at 0x4000 through 0x4012.
+    MOVL r0, 0x00
+    MOVH r0, 0x00
     MOVL r5, 0x00
     MOVH r5, 0x40
     MOVL r4, 10
@@ -542,15 +544,30 @@ spawn_store:
 // Game over and delay
 
 set_game_over:
+    // snakeGameOver = 1
     MOVL r1, 1
     MOVL r5, 0x0A
     MOVH r5, 0x40
     STR  r5, r1
-    MOVL r7, lo(delay)
-    MOVH r7, hi(delay)
+
+game_over_poll:
+    // Read the buttons from 0xD000
+    MOVL r5, 0x00
+    MOVH r5, 0xD0
+    LDR  r1, r5
+
+    // If UP button (0x01) is pressed, jump all the way back to start
+    MOVL r6, lo(start)
+    MOVH r6, hi(start)
+    BEQI r6, r1, 1
+
+    // Otherwise, keep polling the buttons
+    MOVL r7, lo(game_over_poll)
+    MOVH r7, hi(game_over_poll)
     BR   r7
 
 delay:
+    // This controls the speed of the snake!
     MOVL r1, 0xFF
     MOVH r1, 0xFF
 
