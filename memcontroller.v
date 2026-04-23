@@ -11,10 +11,13 @@ module memcontroller(input clk,
     // instructions
     memRAM RAM(clk, raddr0, rdata0);
 
+    reg [15:0] raddr1_ = 0;
+    reg [15:0] raddr1__ = 0;
+
     wire [15:0] data_out;
     wire data_wen;
     assign data_wen = (wen && waddr > 16'h3fff && waddr < 16'h8000);
-    memData data(clk, raddr1_, data_out, data_wen, waddr, wdata); // Changed to raddr1_
+    memData data(clk, raddr1_, data_out, data_wen, waddr, wdata);
     // frame buffer
     /*wire fb_wen;
     assign fb_wen = (wen && waddr > 16'h7fff && waddr < 16'hd000);
@@ -31,8 +34,6 @@ module memcontroller(input clk,
     assign vga_waddr = waddr;  
     assign vga_wdata = wdata[7:0];
 
-    reg [15:0] raddr1_ = 0;
-    reg [15:0] raddr1__ = 0;
     always @(posedge clk) begin
         raddr1_ <= raddr1;
         raddr1__ <= raddr1_;
@@ -40,7 +41,7 @@ module memcontroller(input clk,
 
     assign rdata1 = raddr1__ < 16'h8000 ? data_out :
                     raddr1__ < 16'hcb00 ? {8'b0, vga_rdata} :
-                    raddr1__ == 16'hd000 ? {12'b0, ~buttons} : 16'b0; // <-- Inverted raw buttons go right here!
+                    raddr1__ == 16'hd000 ? {12'b0, button_reg} : 16'b0;
 
 endmodule
 
