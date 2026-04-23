@@ -7,7 +7,7 @@ module memRAM(input clk,
 
     /* Simulation -- read initial content from file */
     initial begin
-        $readmemh("memRAM.bin",data);
+        $readmemb("memRAM.bin",data);
     end
 
     reg [15:1]raddr;
