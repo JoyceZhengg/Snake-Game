@@ -11,12 +11,10 @@ module memcontroller(input clk,
     // instructions
     memRAM RAM(clk, raddr0, rdata0);
 
-    // data
     wire [15:0] data_out;
     wire data_wen;
     assign data_wen = (wen && waddr > 16'h3fff && waddr < 16'h8000);
-    memData data(clk, raddr1, data_out, data_wen, waddr, wdata);
-
+    memData data(clk, raddr1_, data_out, data_wen, waddr, wdata); // Changed to raddr1_
     // frame buffer
     /*wire fb_wen;
     assign fb_wen = (wen && waddr > 16'h7fff && waddr < 16'hd000);
@@ -28,9 +26,9 @@ module memcontroller(input clk,
     buttons_input b_input(clk, buttons, ren, button_reg);
 
     // cpu to vga frame buffer reads/writes
-    assign vga_raddr = raddr1;
-    assign vga_wen   = wen;    // Use the raw write-enable from the CPU
-    assign vga_waddr = waddr;  // Use the raw write-back address
+    assign vga_raddr = raddr1_; // Changed to raddr1_
+    assign vga_wen   = wen;    
+    assign vga_waddr = waddr;  
     assign vga_wdata = wdata[7:0];
 
     reg [15:0] raddr1_ = 0;
