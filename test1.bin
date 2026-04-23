@@ -1,0 +1,113 @@
+@0
+// MOVL r0, 0x00
+00110000 00000000
+// MOVH r0, 0x00
+00111000 00000000
+// MOVL r1, 0x00
+00110000 00000001
+// MOVH r1, 0x80              // r1 = 0x8000
+00111100 00000001
+// MOVL r2, 0x00
+00110000 00000010
+// MOVH r2, 0x4B              // r2 = 19200 (160*120)
+00111010 01011010
+// STRI r1, 0x00              // Paint green
+11110000 01000000
+// ADDI r1, 1
+00010000 00001001
+// SUBI r2, 1
+00011000 00001010
+// MOVL r7, lo(clear_screen)
+00110000 01100111
+// MOVH r7, hi(clear_screen)
+00111000 00000111
+// BNE  r7, r2, r0
+01001010 10000111
+// MOVL r1, 0xD0
+00110110 10000001
+// MOVH r1, 0xA5              // r1 = current pixel position
+00111101 00101001
+// STRI r1, 0x01
+11110000 01000001
+// MOVL r3, 0xFF
+00110111 11111011
+// MOVH r3, 0x0F              // r3 = 4095
+00111000 01111011
+// SUBI r3, 1
+00011000 00001011
+// MOVL r7, lo(delay_loop)
+00110001 00010111
+// MOVH r7, hi(delay_loop)
+00111000 00000111
+// BNE  r7, r3, r0
+01001010 11000111
+// STRI r1, 0x00
+11110000 01000000
+// MOVL r5, 0x00
+00110000 00000101
+// MOVH r5, 0xD0              // r5 = 0xD000
+00111110 10000101
+// LDR  r2, r5                // r2 = button
+11111001 01000010
+// MOVL r7, lo(move_up)
+00110010 10000111
+// MOVH r7, hi(move_up)
+00111000 00000111
+// BEQI r7, r2, 1
+10000000 10001111
+// MOVL r7, lo(move_left)
+00110010 11000111
+// MOVH r7, hi(move_left)
+00111000 00000111
+// BEQI r7, r2, 2
+10000000 10010111
+// MOVL r7, lo(move_down)
+00110011 00000111
+// MOVH r7, hi(move_down)
+00111000 00000111
+// BEQI r7, r2, 4
+10000000 10100111
+// MOVL r7, lo(move_right)
+00110011 01000111
+// MOVH r7, hi(move_right)
+00111000 00000111
+// BEQI r7, r2, 8
+10000010 10000111
+// MOVL r7, lo(main_loop)
+00110000 11100111
+// MOVH r7, hi(main_loop)
+00111000 00000111
+// BR   r7
+01000000 00000111
+// SUBI r1, 160               // Move up one row
+00011101 00000001
+// MOVL r7, lo(main_loop)
+00110000 11100111
+// MOVH r7, hi(main_loop)
+00111000 00000111
+// BR   r7
+01000000 00000111
+// SUBI r1, 1                 // Move left one pixel
+00011000 00001001
+// MOVL r7, lo(main_loop)
+00110000 11100111
+// MOVH r7, hi(main_loop)
+00111000 00000111
+// BR   r7
+01000000 00000111
+// ADDI r1, 160               // Move down one row
+00010101 00000001
+// MOVL r7, lo(main_loop)
+00110000 11100111
+// MOVH r7, hi(main_loop)
+00111000 00000111
+// BR   r7
+01000000 00000111
+// ADDI r1, 1                 // Move right one pixel
+00010000 00001001
+// MOVL r7, lo(main_loop)
+00110000 11100111
+// MOVH r7, hi(main_loop)
+00111000 00000111
+// BR   r7
+01000000 00000111
