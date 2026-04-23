@@ -7,7 +7,7 @@
 0011000000000001
 0011110100000001
 
-// --- MAIN LOOP (Address 4) ---
+// --- MAIN LOOP (Word Addr 4 -> Byte Addr 8) ---
 // 3. Draw Yellow Pixel
 1111000001010000
 
@@ -18,27 +18,29 @@
 0011001100000011
 0011100000000011
 
-// --- DELAY OUTER LOOP (Address 8) ---
+// --- DELAY OUTER LOOP (Word Addr 8 -> Byte Addr 16 [0x10]) ---
 // 6. Reset Inner Delay Counter (r4 = 0xFFFF)
 0011011111111100
 0011111111111100
 
-// --- DELAY INNER LOOP (Address 10) ---
+// --- DELAY INNER LOOP (Word Addr 10 -> Byte Addr 20 [0x14]) ---
 // 7. Decrement r4
 0001100000001100
-// 8. Jump to Inner Loop (Addr 10) if r4 != 0
-0011000001010111
+
+// 8. Jump to Inner Loop (Target = Byte 20 [0x14]) if r4 != 0
+0011000010100111
 0011100000000111
 0100101100000111
 
 // 9. Decrement r3
 0001100000001011
-// 10. Jump to Outer Loop (Addr 8) if r3 != 0
-0011000001000111
+
+// 10. Jump to Outer Loop (Target = Byte 16 [0x10]) if r3 != 0
+0011000010000111
 0011100000000111
 0100101011000111
 
-// 11. Jump back to Main Loop (Addr 4)
-0011000000100111
+// 11. Jump back to Main Loop (Target = Byte 8 [0x08])
+0011000001000111
 0011100000000111
 0100000000000111
