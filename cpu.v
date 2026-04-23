@@ -211,6 +211,7 @@ module cpu(
                         forward_wb_mem ? wb_str_data : aluout;
 
     // Jump condition
+    wire x_jmp_cond; // <--- ADD THIS LINE HERE
     assign x_jmp_cond = (x_jmptype == 3'b000) ? 1 :
                         (x_jmptype == 3'b100) ? alueq :
                         (x_jmptype == 3'b101) ? !alueq :
