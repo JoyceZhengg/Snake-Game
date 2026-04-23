@@ -1,14 +1,14 @@
 `timescale 1ns/1ps
 
-module randgen(input clk, output[7:0]randnum_);
+module randgen(input clk, output[15:0]randnum_);
     wire bitA, bitB, bitC, randbit;
     LFSR11 LFSR11(clk, bitA);
     LFSR17 LFSR17(clk, bitB);
     LFSR19 LFSR19(clk, bitC);
-    reg [7:0]randnum = 8'b00011010;
+    reg [13:0]randnum = 14'b010111 01110011;
 
     assign randbit = bitC ? bitA : bitB;
-    assign randnum_ = randnum;
+    assign randnum_ = {2'b0, randnum};
 
     always @(posedge clk) begin
         //$write("A: %b, B: %b, C: %b\n", bitA, bitB, bitC);
