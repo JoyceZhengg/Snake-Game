@@ -210,12 +210,12 @@ module cpu(
                         forward_m_mem ? m_str_data :
                         forward_wb_mem ? wb_str_data : aluout;
 
-    // Jump condition
-    wire x_jmp_cond; // <--- ADD THIS LINE HERE
-    assign x_jmp_cond = (x_jmptype == 3'b000) ? 1 :
+    // Jump condition (Fixed Ternary Order)
+    wire x_jmp_cond;
+    assign x_jmp_cond = x_isjmpi            ? alueq :  // <--- Check BEQI first!
+                        (x_jmptype == 3'b000) ? 1 :
                         (x_jmptype == 3'b100) ? alueq :
-                        (x_jmptype == 3'b101) ? !alueq :
-                        x_isjmpi ?              alueq : 0;
+                        (x_jmptype == 3'b101) ? !alueq : 0;
 
     // Jump targeting
     wire [15:1]x_jmp_target; reg [15:1]m_jmp_target, wb_jmp_target;
