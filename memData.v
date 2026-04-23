@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 
 module memData(input clk,
-    input [15:0]raddr_, output [7:0]rdata_,
-    input wen, input [15:0]waddr, input [7:0]wdata);
+    input [15:0]raddr_, output [15:0]rdata_,
+    input wen, input [15:0]waddr, input [15:0]wdata);
 
     reg [7:0]data[0:16'h7fff];
 

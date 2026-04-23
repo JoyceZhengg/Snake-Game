@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+/*`timescale 1ns/1ps
 
 module memFrameBuffer(input clk,
     input [15:0]raddr_, output [7:0]rdata_,
@@ -6,7 +6,7 @@ module memFrameBuffer(input clk,
 
     reg [7:0]data[0:16'h7fff];
 
-    /* Simulation -- read initial content from file */
+    // Simulation -- read initial content from file 
     initial begin
         $readmemb("memFrameBuffer.bin",data);
     end
@@ -24,4 +24,4 @@ module memFrameBuffer(input clk,
         end
     end
 
-endmodule
+endmodule*/

@@ -1,9 +1,10 @@
 module vga_controller (
     input wire clk_50mhz,  // 50 MHz system clock
+    //input wire clk_25mhz.  // 25 MHz vga clock --> set this in Quartus through PLL
     input wire reset,      // Bypassed
 
     // --- CPU Memory Interface (Shared Port A) ---
-    input wire cpu_we,            // Write Enable from memcontroller
+    input wire cpu_wen,           // Write Enable from memcontroller
     input wire [15:0] cpu_waddr,  // Store Address (wb_str_addr)
     input wire [7:0] cpu_wdata,   // Store Data (wb_str_data)
     input wire [15:0] cpu_raddr,  // Load Address (ld_addr)

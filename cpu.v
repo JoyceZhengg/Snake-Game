@@ -1,15 +1,12 @@
 `timescale 1ns/1ps
 
-module main(
+module cpu(
     input wire CLOCK_50,       // Physical 50 MHz clock pin
     input wire [3:0] buttons,  // Physical buttons
     
-    // --- VGA Physical Output Pins ---
-    output wire VGA_HS,        // Horizontal Sync
-    output wire VGA_VS,        // Vertical Sync
-    output wire [1:0] VGA_R,   // 2-bit Red
-    output wire [1:0] VGA_G,   // 2-bit Green
-    output wire [1:0] VGA_B    // 2-bit Blue
+    // CPU reads/writes from/to frame buffer
+    output wire [15:0] vga_waddr, output wire [7:0] vga_wdata, output wire vga_wen,
+    output wire [15:0] vga_raddr, input wire [7:0] vga_rdata
 );
 
     initial begin
@@ -18,12 +15,12 @@ module main(
     end
 
     // clock
-    wire clk;
-    clock c0(clk);
+    /*wire CLOCK_50;
+    clock c0(CLOCK_50);*/
 
     // Random number generator
     wire [7:0]randnum;
-    randgen randgen(clk, randnum);
+    randgen randgen(CLOCK_50, randnum);
 
     reg halt = 0;
     wire d_halt;
@@ -31,7 +28,7 @@ module main(
     reg m_halt = 0;
     reg wb_halt = 0;
 
-    counter ctr(halt,clk);
+    counter ctr(halt,CLOCK_50);
 
     // Valid bits
     reg f0_valid = 1;
@@ -60,23 +57,16 @@ module main(
 
     wire [7:0] vga_read_wire; // Declare a wire to connect them
     
-    memcontroller mem(clk, f_pc, ins, ld_addr, ld_data, mem_wen, wb_str_addr, wb_str_data, buttons, vga_read_wire);
-
-    vga_controller my_vga (
-        .clk_50mhz(CLOCK_50),
-        .reset(1'b0),                 // Reset bypassed as planned
-        .cpu_we(mem_wen),             // Write Enable from CPU
-        .cpu_waddr(wb_str_addr),      // Store Address
-        .cpu_wdata(wb_str_data[7:0]), // Store Data (only need 8 bits for color)
-        .cpu_raddr(ld_addr),          // Load Address
-        .cpu_rdata(vga_read_wire),    // Feeds back into memcontroller
-        
-        // Output to physical pins
-        .vga_hsync(VGA_HS),
-        .vga_vsync(VGA_VS),
-        .vga_r(VGA_R),
-        .vga_g(VGA_G),
-        .vga_b(VGA_B)
+    memcontroller mem(CLOCK_50, 
+        f_pc, ins, 
+        ld_addr, ld_data, 
+        mem_wen, wb_str_addr, wb_str_data, 
+        buttons,
+        .vga_raddr  (vga_raddr),
+        .vga_rdata  (vga_rdata),
+        .vga_wen    (vga_wen),
+        .vga_waddr  (vga_waddr),
+        .vga_wdata  (vga_wdata)
     );
 
     // Instruction queue to capture instructions output from memory while decode stalls
@@ -168,7 +158,7 @@ module main(
 
     // registers
     ioregs regs(
-        clk,
+        CLOCK_50,
         d_regraddr0, regrdata0,
         d_regraddr1, regrdata1,
         d_regraddr2, regrdata2,
@@ -233,7 +223,7 @@ module main(
 
     //assign f_jmp_prediction = f_pc + 1;
     reg m_jumping, wb_jumping;
-    predictor predictor(clk, f_pc, f_jmp_prediction, wb_jumping & wb_valid, wb_pc, wb_jmp_target, wb_jmp_mispredict & wb_valid, wb_isjmp & wb_valid);
+    predictor predictor(CLOCK_50, f_pc, f_jmp_prediction, wb_jumping & wb_valid, wb_pc, wb_jmp_target, wb_jmp_mispredict & wb_valid, wb_isjmp & wb_valid);
     assign d_jmp_prediction =   ins_queue1_full ? ins_queue1_jmp_prediction :
                                 ins_queue0_full ? ins_queue0_jmp_prediction : ins_jmp_prediction;
 
@@ -266,7 +256,7 @@ module main(
     reg stall_default = 0;
     assign m_stall = stall_default;
 
-    always @(posedge clk) begin
+    always @(posedge CLOCK_50) begin
         /*if (f_pc == 20) begin
             x_halt <= 1;
         end*/
