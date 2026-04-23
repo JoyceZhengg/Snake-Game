@@ -588,7 +588,7 @@ game_over_poll:
 delay:
     // Nested loop to control the speed of the snake!
     // Decrease 0x14 to make the snake faster, increase to make it slower.
-    MOVL r3, 0x14
+    MOVL r3, 0x10  // <--- Change this to 0x10
     MOVH r3, 0x00
 
 delay_outer:

@@ -21,9 +21,9 @@ module memcontroller(input clk,
     memFrameBuffer fb(clk, vga_raddr, vga_rdata, fb_wen, waddr, wdata);*/
 
     // button inputs (read only)
-    //wire [3:0] button_reg;
-    //wire ren = (raddr1 == 16'hd000);
-    //buttons_input b_input(clk, buttons, ren, button_reg);
+    wire [3:0] button_reg;
+    wire ren = (raddr1 == 16'hd000);
+    buttons_input b_input(clk, buttons, ren, button_reg);
 
     // cpu to vga frame buffer reads/writes
     assign vga_raddr = raddr1_; // Changed to raddr1_
