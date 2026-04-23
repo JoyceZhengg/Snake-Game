@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-	module main(
+module main(
     input wire CLOCK_50,       // Physical 50 MHz clock pin
     input wire [3:0] buttons,  // Physical buttons
 
