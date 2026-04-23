@@ -45,7 +45,7 @@
 // gameInit
 
 start:
-    // Clear game-state words at 0x4000 through 0x4012.
+    // Clear game state words at 0x4000 through 0x4012.
     MOVL r5, 0x00
     MOVH r5, 0x40
     MOVL r4, 10
@@ -333,29 +333,29 @@ after_input:
 
 move_left:
     SUBI r1, 1
-    MOVL r6, lo(after_move_math)
-    MOVH r6, hi(after_move_math)
+    MOVL r6, lo(check_next_head)
+    MOVH r6, hi(check_next_head)
     BR   r6
 
 move_right:
     ADDI r1, 1
-    MOVL r6, lo(after_move_math)
-    MOVH r6, hi(after_move_math)
+    MOVL r6, lo(check_next_head)
+    MOVH r6, hi(check_next_head)
     BR   r6
 
 move_up:
     SUBI r1, 160
-    MOVL r6, lo(after_move_math)
-    MOVH r6, hi(after_move_math)
+    MOVL r6, lo(check_next_head)
+    MOVH r6, hi(check_next_head)
     BR   r6
 
 move_down:
     ADDI r1, 160
-    MOVL r6, lo(after_move_math)
-    MOVH r6, hi(after_move_math)
+    MOVL r6, lo(check_next_head)
+    MOVH r6, hi(check_next_head)
     BR   r6
 
-after_move_math:
+check_next_head:
     // save next head address in temp 
     MOVL r5, 0x10
     MOVH r5, 0x40
@@ -368,14 +368,16 @@ after_move_math:
     MOVH r7, hi(eat_banana)
     BEQ  r7, r2, r3
 
-    // if not eating, erase the old tail/head first, then test for wall/body
-    MOVL r7, lo(after_tail_erased_for_check)
-    MOVH r7, hi(after_tail_erased_for_check)
+    // Normal move: erase the tail before checking blue collision.
+    // This lets the head move into the square where the tail just was.
+    MOVL r7, lo(check_normal_move_collision)
+    MOVH r7, hi(check_normal_move_collision)
     MOVL r6, lo(erase_tail)
     MOVH r6, hi(erase_tail)
     BR   r6
 
-after_tail_erased_for_check:
+check_normal_move_collision:
+    // Reload nextHead and read the screen again after the tail is gone.
     MOVL r5, 0x10
     MOVH r5, 0x40
     LDR  r1, r5
@@ -501,41 +503,13 @@ commit_store_write_ptr:
 // Banana spawning
 
 spawn_banana:
-    // Start from the previous banana or if there is no previous banana
-    // seed near the center but away from the initial head 
-    MOVL r5, 0x06
-    MOVH r5, 0x40
-    LDR  r1, r5
-    MOVL r6, lo(spawn_have_base)
-    MOVH r6, hi(spawn_have_base)
-    BNE  r6, r1, r0
-
-spawn_seed:
-    MOVL r1, 0x70
-    MOVH r1, 0xA6
-
-spawn_have_base:
+    // Pick a random starting address near the first playable row, then scan
+    // forward until the screen says the pixel is empty.
     RAND r2
     MOVH r2, 0x00
-    MOVL r6, lo(spawn_scan)
-    MOVH r6, hi(spawn_scan)
-    BEQ  r6, r2, r0
-
-spawn_random_offset:
-    ADDI r1, 1
-    MOVL r3, 0x00
-    MOVH r3, 0xCB
-    MOVL r6, lo(spawn_offset_after_wrap)
-    MOVH r6, hi(spawn_offset_after_wrap)
-    BNE  r6, r1, r3
     MOVL r1, 0xA1
     MOVH r1, 0x80
-
-spawn_offset_after_wrap:
-    SUBI r2, 1
-    MOVL r6, lo(spawn_random_offset)
-    MOVH r6, hi(spawn_random_offset)
-    BNE  r6, r2, r0
+    ADD  r1, r1, r2
 
 spawn_scan:
     // Wrap 0xCB00 back to first inner playable cell 0x80A1
