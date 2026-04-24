@@ -30,8 +30,7 @@ module memcontroller(input clk,
 
     // cpu to vga frame buffer reads/writes
     assign vga_raddr = raddr1_; // Changed to raddr1_
-    assign vga_wen   = wen;    
-    assign vga_waddr = waddr;  
+    assign vga_wen = wen && (waddr >= 16'h8000) && (waddr < 16'hCB00);    assign vga_waddr = waddr;  
     assign vga_wdata = wdata[7:0];
 
     always @(posedge clk) begin
