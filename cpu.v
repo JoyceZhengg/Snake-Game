@@ -365,6 +365,7 @@ module cpu(
             x_regwen <= d_regwen;
             x_regwaddr <= (d_valid & d_isldp & (pair_phase == 0)) ? d_regwaddr + 1: d_regwaddr;
             x_imm <= d_imm;
+            x_randnum <= randnum;
             x_jmptype <= d_jmptype;
             {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_ismovr, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr} <=
             {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovil, d_ismovih, d_ismovr, d_isjmp, d_isjmpi, d_isld, d_isstri, d_isstr};
