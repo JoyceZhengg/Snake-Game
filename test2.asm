@@ -14,26 +14,26 @@ loop:
     MOVH r6, hi(draw_square)
     BEQ  r6, r2, r0            // if r2 == 0, use green (0x00)
 
-    // UP (0x01) → Blue (0x01)
-    MOVL r3, 0x01
+    // UP (0x04) → Blue (0x01)
+    MOVL r3, 0x04
     MOVL r6, lo(button_up)
     MOVH r6, hi(button_up)
     BEQ  r6, r2, r3
 
-    // LEFT (0x02) → Blue (0x01) 
-    MOVL r3, 0x02
+    // LEFT (0x08) → Blue (0x01)
+    MOVL r3, 0x08
     MOVL r6, lo(button_left)
     MOVH r6, hi(button_left)
     BEQ  r6, r2, r3
 
-    // DOWN (0x04) → Yellow (0x10)
-    MOVL r3, 0x04
+    // DOWN (0x02) → Yellow (0x10)
+    MOVL r3, 0x02
     MOVL r6, lo(button_down)
     MOVH r6, hi(button_down)
     BEQ  r6, r2, r3
 
-    // RIGHT (0x08) → Yellow (0x10)
-    MOVL r3, 0x08
+    // RIGHT (0x01) → Yellow (0x10)
+    MOVL r3, 0x01
     MOVL r6, lo(button_right)
     MOVH r6, hi(button_right)
     BEQ  r6, r2, r3
@@ -92,6 +92,16 @@ draw_cols:
     MOVL r7, lo(draw_rows)
     MOVH r7, hi(draw_rows)
     BNE  r7, r4, r0
+
+    // Hold the visible color for a short time so button pulses are noticeable.
+    MOVL r3, 0xFF
+    MOVH r3, 0x0F
+
+delay_loop:
+    SUBI r3, 1
+    MOVL r7, lo(delay_loop)
+    MOVH r7, hi(delay_loop)
+    BNE  r7, r3, r0
 
     MOVL r7, lo(loop)
     MOVH r7, hi(loop)
