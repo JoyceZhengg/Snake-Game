@@ -10,7 +10,7 @@ module debouncer(input clk,
 
     always @(posedge clk) begin
         if (signal_in == 1) begin
-            if (threshhold < 500000) begin
+            if (threshhold < 50000) begin
                 threshhold <= threshhold + 1;
             end else begin
                 signal_out <= 1;
