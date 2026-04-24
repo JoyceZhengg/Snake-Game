@@ -164,8 +164,7 @@ module cpu(
     wire [2:0]master_regwaddr = wb_regwaddr;
     wire [15:0]master_regwdata = (wb_isld & !wb_str_forwarded) ? ld_data : wb_regwdata;
 
-    assign d_regwen = !halt && (d_ismovil || d_ismovih || d_isimmadd || d_isregadd || d_isld);
-    assign d_regwaddr = rt;
+    assign d_regwen = !halt && (d_ismovil || d_ismovih || d_ismovr || d_isimmadd || d_isregadd || d_isld);    assign d_regwaddr = rt;
 
     // registers
     ioregs regs(
