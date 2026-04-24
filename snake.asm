@@ -522,15 +522,53 @@ commit_store_write_ptr:
 // Banana spawning
 
 spawn_banana:
-    // Pick a random starting address near the first playable row, then scan
-    // forward until the screen says the pixel is empty.
+    // Build a random interior cell:
+    MOVL r4, 0x00
+    MOVH r4, 0xFF
+    // random row seed
+    RAND r1
+
+row_mod_loop:
+    SUBI r1, 118
+    ADD  r3, r1, r0
+    MOVH r3, 0x00
+    SUB  r5, r1, r3
+    MOVL r6, lo(row_mod_loop)
+    MOVH r6, hi(row_mod_loop)
+    BNE  r6, r5, r4
+    ADDI r1, 118
+    ADDI r1, 1
+
+    // r2 = random column seed
     RAND r2
-    MOVH r2, 0x00
-    // Fix: Shift the starting search location to the middle of the screen (0xA000)
-    // This guarantees the banana will not spawn under the monitor's plastic bezel
-    MOVL r1, 0x00
-    MOVH r1, 0xA0
-    ADD  r1, r1, r2
+
+col_mod_loop:
+    SUBI r2, 158
+    ADD  r3, r2, r0
+    MOVH r3, 0x00
+    SUB  r5, r2, r3
+    MOVL r6, lo(col_mod_loop)
+    MOVH r6, hi(col_mod_loop)
+    BNE  r6, r5, r4
+    ADDI r2, 158
+    ADDI r2, 1
+
+    // r5 = 0x8000 framebuffer base
+    MOVL r5, 0x00
+    MOVH r5, 0x80
+
+row_to_addr_loop:
+    MOVL r6, lo(row_to_addr_done)
+    MOVH r6, hi(row_to_addr_done)
+    BEQ  r6, r1, r0
+    ADDI r5, 160
+    SUBI r1, 1
+    MOVL r6, lo(row_to_addr_loop)
+    MOVH r6, hi(row_to_addr_loop)
+    BR   r6
+
+row_to_addr_done:
+    ADD  r1, r5, r2
 
 spawn_scan:
     // Wrap 0xCB00 back to first inner playable cell 0x80A1
