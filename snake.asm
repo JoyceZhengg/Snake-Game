@@ -16,10 +16,10 @@
 //   DIR_DOWN = 4
 
 // Assumed button mapping for mem[0xD000]:
-//   0x01 = UP
-//   0x02 = LEFT
-//   0x04 = DOWN
-//   0x08 = RIGHT
+//   0x01 = RIGHT
+//   0x02 = DOWN
+//   0x04 = UP
+//   0x08 = LEFT
 
 // Data memory map:
 //   0x4000 : snakeHeadAddr
@@ -188,19 +188,19 @@ main_loop:
 // switch between directions
     MOVL r6, lo(dir_up_pressed)
     MOVH r6, hi(dir_up_pressed)
-    BEQI r6, r1, 1
+    BEQI r6, r1, 4
 
     MOVL r6, lo(dir_left_pressed)
     MOVH r6, hi(dir_left_pressed)
-    BEQI r6, r1, 2
+    BEQI r6, r1, 8
 
     MOVL r6, lo(dir_down_pressed)
     MOVH r6, hi(dir_down_pressed)
-    BEQI r6, r1, 4
+    BEQI r6, r1, 2
 
     MOVL r6, lo(dir_right_pressed)
     MOVH r6, hi(dir_right_pressed)
-    BEQI r6, r1, 8
+    BEQI r6, r1, 1
 
     MOVL r7, lo(after_input)
     MOVH r7, hi(after_input)
@@ -575,10 +575,10 @@ game_over_poll:
     MOVH r5, 0xD0
     LDR  r1, r5
 
-    // If UP button (0x01) is pressed, jump all the way back to start
+    // If UP button (0x04) is pressed, jump all the way back to start
     MOVL r6, lo(start)
     MOVH r6, hi(start)
-    BEQI r6, r1, 1
+    BEQI r6, r1, 4
 
     // Otherwise, keep polling the buttons forever
     MOVL r7, lo(game_over_poll)
