@@ -19,7 +19,7 @@ module cpu(
     clock c0(CLOCK_50);*/
 
     // Random number generator
-    wire [7:0]randnum;
+    wire [15:0]randnum;
     randgen randgen(CLOCK_50, randnum);
 
     reg halt = 0;
@@ -94,7 +94,7 @@ module cpu(
     wire [3:0]opcode;
     assign opcode = d_ins[15:12];
     wire d_isimmadd, d_isregadd, d_issub, d_ismovil, d_ismovih, d_ismovr, d_isjmp, d_isjmpi, d_isld, d_isldp, d_isstri, d_isstr, d_isstrp;
-    reg x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr;
+    reg x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_ismovr, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr;
     reg m_isld = 0; reg m_isstr = 0;
     reg wb_isld = 0; reg wb_isstr = 0;
     reg m_isjmp, wb_isjmp;
@@ -103,7 +103,7 @@ module cpu(
     assign d_isimmadd = opcode == 4'b0001;
     assign d_isregadd = opcode == 4'b0010;
     assign d_issub = d_ins[11] || d_isjmpi;
-    assign d_ismovil = (opcode == 4'b0011 && !d_ins[11]) || d_ismovr;
+    assign d_ismovil = (opcode == 4'b0011 && !d_ins[11]);
     assign d_ismovih = (opcode == 4'b0011 && d_ins[11]);
     assign d_ismovr = (opcode == 4'b0000) && d_ins[11];
     assign d_isjmp = opcode == 4'b0100 || d_isjmpi;
@@ -129,8 +129,7 @@ module cpu(
 
     // Instruction immediate
     wire [7:0]d_imm; reg [7:0]x_imm;
-    assign d_imm =  d_ismovr ? randnum:
-                    d_isjmpi ? {d_ins[13:9], d_ins[5:3]} :
+    assign d_imm =  d_isjmpi ? {d_ins[13:9], d_ins[5:3]} :
                     d_isstri ? {d_ins[10:9], d_ins[5:0]} : d_ins[10:3];
 
     //wire [15:0]imml, immh;
@@ -207,6 +206,7 @@ module cpu(
     // Register write data
     assign x_regwdata = x_ismovil ? {{8{x_imm[7]}}, x_imm} :
                         x_ismovih ? {x_imm, reg_fw_data0[7:0]} :
+                        x_ismovr ? randnum :
                         forward_m_mem ? m_str_data :
                         forward_wb_mem ? wb_str_data : aluout;
 
@@ -248,7 +248,7 @@ module cpu(
     reg halt_found = 0;
     wire illegal_ins;
     //assign illegal_ins = d_valid & (({d_halt, d_isregadd, d_ismovil, d_ismovih, d_isjmp, d_isld, d_isstr} == 7'b0) | (d_isjmp & (d_jmptype > 3)) | d_ins === 16'bx);
-    assign illegal_ins = d_valid & (({d_halt, d_isimmadd, d_isregadd, d_ismovil, d_ismovih, d_isjmp, d_isld, d_isstr} == 8'b0));
+    assign illegal_ins = d_valid & (({d_halt, d_isimmadd, d_isregadd, d_ismovil, d_ismovih, d_ismovr, d_isjmp, d_isld, d_isstr} == 9'b0));
 
     // Stalling
     wire f_stall, d_stall, x_stall, m_stall;
@@ -366,8 +366,8 @@ module cpu(
             x_regwaddr <= (d_valid & d_isldp & (pair_phase == 0)) ? d_regwaddr + 1: d_regwaddr;
             x_imm <= d_imm;
             x_jmptype <= d_jmptype;
-            {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr} <=
-            {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovil, d_ismovih, d_isjmp, d_isjmpi, d_isld, d_isstri, d_isstr};
+            {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_ismovr, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr} <=
+            {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovil, d_ismovih, d_ismovr, d_isjmp, d_isjmpi, d_isld, d_isstri, d_isstr};
         end
         halt_found <= !flush & ((d_halt && d_valid) | halt_found);
         //pair_phase <= (d_valid & (d_isldp | d_isstrp)) ? !pair_phase : 0;
