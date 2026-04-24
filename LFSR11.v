@@ -2,16 +2,16 @@
 
 module LFSR11(input clk, output randnum);
     integer i;
-    reg [10:0]seed = 11'b00001011101;
-    reg cells[10:0];
+    //reg [10:0]seed = 11'b00001011101;
+    reg [10:0]cells = 11'b00001011101;
 
     assign randnum = cells[10];
 
-    initial begin
+    /*initial begin
         for (i = 0; i < 11; i = i + 1) begin
             cells[i] <= seed[i];
         end
-    end
+    end*/
 
     always @(posedge clk) begin
         for (i = 0; i < 10; i = i + 1) begin

@@ -2,16 +2,16 @@
 
 module LFSR4(input clk, output randnum);
     integer i;
-    reg [3:0]seed = 4'b1001;
-    reg cells[3:0];
+    //reg [3:0]seed = 4'b1001;
+    reg [3:0]cells = 4'b1001;
 
     assign randnum = cells[3];
 
-    initial begin
+    /*initial begin
         for (i = 0; i < 4; i = i + 1) begin
             cells[i] <= seed[i];
         end
-    end
+    end*/
 
     always @(posedge clk) begin
         for (i = 0; i < 3; i = i + 1) begin

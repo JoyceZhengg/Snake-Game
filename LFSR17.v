@@ -2,16 +2,16 @@
 
 module LFSR17(input clk, output randnum);
     integer i;
-    reg [16:0]seed = 17'b01011101110001110;
-    reg cells[16:0];
+    //reg [16:0]seed = 17'b01011101110001110;
+    reg [16:0]cells = 17'b01011101110001110;
 
     assign randnum = cells[16];
 
-    initial begin
+    /*initial begin
         for (i = 0; i < 17; i = i + 1) begin
             cells[i] <= seed[i];
         end
-    end
+    end*/
 
     always @(posedge clk) begin
         for (i = 0; i < 16; i = i + 1) begin
