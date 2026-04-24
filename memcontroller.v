@@ -39,9 +39,28 @@ module memcontroller(input clk,
         raddr1__ <= raddr1_;
     end
 
+    // ==========================================
+    // STICKY BUTTON LATCH
+    // ==========================================
+    reg [3:0] sticky_buttons = 0;
+    wire [3:0] raw_press = ~buttons;
+
+    always @(posedge clk) begin
+        // If the CPU is currently reading the buttons this exact cycle,
+        // reset the latch back to the physical pins for the next frame.
+        if (raddr1__ == 16'hd000) begin
+            sticky_buttons <= raw_press; 
+        end else begin
+            // While the CPU is busy in the delay loop, listen to the hardware.
+            // If any button is pressed for even 1 cycle, latch it high!
+            sticky_buttons <= sticky_buttons | raw_press;
+        end
+    end
+
+// Look closely at the last line: Change ~buttons to sticky_buttons!
     assign rdata1 = raddr1__ < 16'h8000 ? data_out :
                     raddr1__ < 16'hcb00 ? {8'b0, vga_rdata} :
-                    raddr1__ == 16'hd000 ? {12'b0, button_reg} : 16'b0;
+                    raddr1__ == 16'hd000 ? {12'b0, sticky_buttons} : 16'b0;
 
 endmodule
 
