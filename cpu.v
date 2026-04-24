@@ -93,10 +93,17 @@ module cpu(
     // Instruction opcode signals
     wire [3:0]opcode;
     assign opcode = d_ins[15:12];
+
     wire d_isimmadd, d_isregadd, d_issub, d_ismovil, d_ismovih, d_ismovr, d_isjmp, d_isjmpi, d_isld, d_isldp, d_isstri, d_isstr, d_isstrp;
-    reg x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_ismovr, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr;
-    reg m_isld = 0; reg m_isstr = 0;
+    
+    // ---> THESE TWO LINES WERE ACCIDENTALLY DELETED! <---
+    reg x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr;
     reg wb_isld = 0; reg wb_isstr = 0;
+    
+    reg x_ismovr;         
+    reg [15:0] x_randnum; 
+
+    reg m_isld = 0; reg m_isstr = 0;
     reg m_isjmp, wb_isjmp;
 
     assign d_halt = (opcode == 4'b0000) && (d_ins[11:10] == 2'b01);
@@ -204,7 +211,8 @@ module cpu(
     assign forward_wb_mem = x_isld & wb_valid & wb_isstr & (wb_str_addr == ld_addr);
 
     // Register write data
-    assign x_regwdata = x_ismovil ? {{8{x_imm[7]}}, x_imm} :
+    assign x_regwdata = x_ismovr ? x_randnum :
+                        x_ismovil ? {{8{x_imm[7]}}, x_imm} :
                         x_ismovih ? {x_imm, reg_fw_data0[7:0]} :
                         x_ismovr ? randnum :
                         forward_m_mem ? m_str_data :
@@ -365,8 +373,10 @@ module cpu(
             x_regwen <= d_regwen;
             x_regwaddr <= (d_valid & d_isldp & (pair_phase == 0)) ? d_regwaddr + 1: d_regwaddr;
             x_imm <= d_imm;
-            randnum <= randnum;
+            x_randnum <= randnum; // <-- GRAB THE 16-BIT RANDOM NUMBER
             x_jmptype <= d_jmptype;
+            
+            // NOTICE: Added x_ismovr / d_ismovr to these two lists!
             {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_ismovr, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr} <=
             {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovil, d_ismovih, d_ismovr, d_isjmp, d_isjmpi, d_isld, d_isstri, d_isstr};
         end
