@@ -525,8 +525,10 @@ spawn_banana:
     // Build a random interior cell:
     MOVL r4, 0x00
     MOVH r4, 0xFF
-    // random row seed
+    // Sample both random seeds up front so the column choice does not depend
+    // on how many cycles the row reduction loop takes.
     RAND r1
+    RAND r2
 
 row_mod_loop:
     SUBI r1, 118
@@ -538,9 +540,6 @@ row_mod_loop:
     BNE  r6, r5, r4
     ADDI r1, 118
     ADDI r1, 1
-
-    // r2 = random column seed
-    RAND r2
 
 col_mod_loop:
     SUBI r2, 158
