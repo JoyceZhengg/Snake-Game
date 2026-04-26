@@ -1,8 +1,4 @@
-// ============================================================================
-// SIMPLE MOVEMENT TEST
-// This program creates a single blue pixel that moves in response to buttons
-// Use this to verify: buttons work, VRAM writes work, delays work
-// ============================================================================
+// test buttons, vram, delay
 
 start:
     // Guarantee r0 = 0

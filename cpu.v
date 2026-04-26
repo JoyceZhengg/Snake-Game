@@ -96,7 +96,6 @@ module cpu(
 
     wire d_isimmadd, d_isregadd, d_issub, d_ismovil, d_ismovih, d_ismovr, d_isjmp, d_isjmpi, d_isld, d_isldp, d_isstri, d_isstr, d_isstrp;
     
-    // ---> THESE TWO LINES WERE ACCIDENTALLY DELETED! <---
     reg x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr;
     reg wb_isld = 0; reg wb_isstr = 0;
     
@@ -219,7 +218,7 @@ module cpu(
 
     // Jump condition (Fixed Ternary Order)
     wire x_jmp_cond;
-    assign x_jmp_cond = x_isjmpi            ? alueq :  // <--- Check BEQI first!
+    assign x_jmp_cond = x_isjmpi            ? alueq :  \
                         (x_jmptype == 3'b000) ? 1 :
                         (x_jmptype == 3'b100) ? alueq :
                         (x_jmptype == 3'b101) ? !alueq : 0;
@@ -372,10 +371,10 @@ module cpu(
             x_regwen <= d_regwen;
             x_regwaddr <= (d_valid & d_isldp & (pair_phase == 0)) ? d_regwaddr + 1: d_regwaddr;
             x_imm <= d_imm;
-            x_randnum <= randnum; // <-- GRAB THE 16-BIT RANDOM NUMBER
+            x_randnum <= randnum; 
             x_jmptype <= d_jmptype;
             
-            // NOTICE: Added x_ismovr / d_ismovr to these two lists!
+
             {x_halt, x_isimmadd, x_isregadd, x_issub, x_ismovil, x_ismovih, x_ismovr, x_isjmp, x_isjmpi, x_isld, x_isstri, x_isstr} <=
             {d_halt, d_isimmadd, d_isregadd, d_issub, d_ismovil, d_ismovih, d_ismovr, d_isjmp, d_isjmpi, d_isld, d_isstri, d_isstr};
         end

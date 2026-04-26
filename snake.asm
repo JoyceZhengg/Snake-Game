@@ -373,13 +373,10 @@ commit_store_write_ptr:
     // (Logic handled in binary structure below to branch correctly)
     BR   r7
 
-// ============================================
-// THE FIXED SPAWN BANANA LOGIC
-// ============================================
 spawn_banana:
     RAND r2
-    MOVL r0, 0x00    // <--- THIS REPLACES 'MOVH r2, 0' AS A NOP TO KEEP BYTE COUNT!
-    MOVL r1, 0xA1    // <--- START AT TOP-LEFT PLAYABLE CELL
+    MOVL r0, 0x00    
+    MOVL r1, 0xA1    
     MOVH r1, 0x80
     ADD  r1, r1, r2
 

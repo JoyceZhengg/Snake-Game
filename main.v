@@ -1,15 +1,15 @@
 `timescale 1ns/1ps
 
 	module main(
-    input wire CLOCK_50,       // Physical 50 MHz clock pin
-    input wire [3:0] buttons,  // Physical buttons
+    input wire CLOCK_50, // Physical 50 MHz clock pin
+    input wire [3:0] buttons, // Physical buttons
 
     // --- VGA Physical Output Pins ---
-    output wire VGA_HS,        // Horizontal Sync
-    output wire VGA_VS,        // Vertical Sync
-    output wire [1:0] VGA_R,   // 2-bit Red
-    output wire [1:0] VGA_G,   // 2-bit Green
-    output wire [1:0] VGA_B    // 2-bit Blue
+    output wire VGA_HS,  // Horizontal Sync
+    output wire VGA_VS,  // Vertical Sync
+    output wire [1:0] VGA_R, // 2-bit Red
+    output wire [1:0] VGA_G, // 2-bit Green
+    output wire [1:0] VGA_B  // 2-bit Blue
     );
 
     /*wire CLOCK_25;

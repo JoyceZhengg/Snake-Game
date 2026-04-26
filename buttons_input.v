@@ -43,7 +43,7 @@ module buttons_input(input clk, input [3:0] buttons, input ren, output [3:0] but
     reg [3:0] button_reg2 = 0;
     assign button_reg_ = button_reg2;
 
-    // 2-cycle delay
+    // 2 cycle delay
     always @(posedge clk) begin
         button_reg1 <= button_reg;
         button_reg2 <= button_reg1;
